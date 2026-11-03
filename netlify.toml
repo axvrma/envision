@@ -1,9 +1,21 @@
 [build]
   command = "npm run build"
   publish = "dist"
-
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
+
+[[redirects]]
+  from = "/ar"
+  to = "/ar/"
+  status = 301
+[[redirects]]
+  from = "/experience"
+  to = "/experience/index.html"
+  status = 200
+[[redirects]]
+  from = "/technology"
+  to = "/technology/index.html"
+  status = 200
 
 [[headers]]
   for = "/*"
@@ -11,25 +23,29 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=*, microphone=*, xr-spatial-tracking=*"
-
+    Permissions-Policy = "camera=(self), microphone=(self), xr-spatial-tracking=(self)"
+[[headers]]
+  for = "/ar/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+[[headers]]
+  for = "/ar/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json; charset=utf-8"
+    Cache-Control = "no-cache"
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+[[headers]]
+  for = "/ar/bundle.*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
 [[headers]]
   for = "/sw.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/manifest.webmanifest"
-  [headers.values]
-    Content-Type = "application/manifest+json; charset=utf-8"
-    Cache-Control = "no-cache"
-
-[[headers]]
-  for = "/bundle.*.js"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/icons/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"

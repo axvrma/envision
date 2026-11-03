@@ -1,4 +1,4 @@
-name: NodeJS with Webpack
+name: Envision checks
 
 on:
   push:
@@ -13,10 +13,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Use Node.js 20
+    - name: Use Node.js 22
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22
         cache: npm
 
     - name: Install dependencies
@@ -24,3 +24,12 @@ jobs:
 
     - name: Build
       run: npm run build
+
+    - name: Unit and static output tests
+      run: npm test
+
+    - name: Install Chromium
+      run: npx playwright install --with-deps chromium
+
+    - name: Browser tests
+      run: npm run test:e2e
