@@ -16,7 +16,7 @@ The landing page's violet-black, lavender, gold/cyan, Inter/IBM Plex Mono visual
 | Editing | Shared colors, duplicate at current valid pose, delete, deselect, confirmed clear, reset placement, bounded Undo/Redo |
 | Commands | Existing aliases/text/optional speech through shared parsing/domain; permission/unsupported/network feedback; AR confirmation remains explicit |
 | Local scenes | IndexedDB name/save/open/rename/duplicate/delete, JSON export/import with schema/size/type/transform validation; AR restores only at a fresh confirmed origin |
-| Capture | Labeled virtual-only PNG from current view; no engine background/camera/control pixels; download and capability-gated native sharing |
+| Capture | Public 8th Wall camera + object photo pipeline; preview/download/share; explicit labeled objects-only export for unsupported paths |
 | Studio | Manual creation uses structured domain API; shared state/history/storage, matching model sizes and metre transforms, library thumbnails/search, Launch AR link |
 | Lifecycle | Duplicate-start guards, late-callback suppression, hit-source cancellation, engine stop/module cleanup, object/material/renderer disposal, speech abort, background/end/context-loss handling |
 | Release | Product metadata and GitHub URLs updated, social image regenerated, original static Netlify architecture preserved |
@@ -37,7 +37,7 @@ Only `fake-indexeddb` was added, as a development dependency for actual reposito
 
 ## Validation and build
 
-The clean install, TypeScript check, production build, **33 unit/static tests** and **31 Chromium browser tests** pass. Full test boundaries and measurements are in [VALIDATION.md](VALIDATION.md). The build produces `dist/` and retains renderer bundle-size warnings. The final application has not been pushed or deployed.
+The clean install, TypeScript check, production build, **39 unit/static tests** and **37 Chromium browser tests** pass. Full test boundaries and measurements are in [VALIDATION.md](VALIDATION.md). The build produces `dist/` and retains renderer bundle-size warnings. The final application has not been pushed or deployed.
 
 ## Known limitations and hardware-dependent work
 
@@ -45,7 +45,7 @@ The clean install, TypeScript check, production build, **33 unit/static tests** 
 - 8th Wall uses a pinned closed, separately licensed binary and network-delivered resources. Its plane intersection is not native surface detection. Runtime delivery was checked, not physical SLAM startup. The [capability/license audit](AR-CAPABILITY-AUDIT.md) includes official sources and exact dependencies.
 - Only horizontal upright placement is supported. Explicit Move replaces unreliable screen-plane dragging. Duplicates initially overlap the source at its existing valid pose and can then be moved.
 - Neither adapter provides persistent physical anchors. Composition names/objects/transforms survive in IndexedDB, subject to browser storage policy; physical placement does not. Ending/restarting requires a new tracked origin and resets old-session history.
-- Combined camera capture is unavailable. The objects-only export states that limitation in UI and on the image itself. Native sharing depends on the actual browser/device.
+- 8th Wall camera-inclusive capture depends on the public screenshot API and needs physical-device verification. WebXR camera photo access is unavailable in this integration and is explained explicitly. Objects-only export is secondary and labeled. Native sharing depends on the device.
 - Desktop synthetic timings and mesh counts are recorded; mobile frame rate, battery and thermal performance are not guaranteed. Twelve flocks are a relatively expensive scene.
 - UI supports keyboard/screen-reader controls, but immersive camera aiming still has visual/physical constraints. Browser Studio supplies the alternative.
 
@@ -66,6 +66,12 @@ No deployment, remote configuration or Git push was performed in this execution.
 
 ## Mobile and 8th Wall follow-up
 
-Viewport-bounded, shrinkable sheet layouts address cropped mobile controls, including resizing a sheet after opening it. Session errors now use an explicit alert dialog above all sheets with retry and Studio actions, including a real missing-frame timeout. The worker cache version is v4.
+Viewport-bounded, shrinkable sheet layouts address cropped mobile controls, including resizing a sheet after opening it. Session errors now use an explicit alert dialog above all sheets with retry and Studio actions, including a real missing-frame timeout. The worker cache version is v5.
 
 Tracking adds SDK surface hits when available, uses fresh frame camera poses/projection inverses and event tracking status, applies time-based target smoothing, and avoids rebuilding scene lists on tracking-only changes. AR form thumbnails are now static factory-generated assets (`website/public/models/thumbnails/`), with regeneration in `scripts/generate-model-thumbnails.mjs`, removing extra WebGL context creation during camera use. `src/ar/tracking.js`, `tests/tracking.test.mjs` and `tests/browser/ar-regressions.spec.ts` contain the new implementation and regressions. See validation for the physical-device limits.
+
+## Camera/photo and landing follow-up
+
+The app camera viewport replaces conflicting renderer-DPR/FullWindowCanvas sizing, defaults to full camera aspect, offers optional Fill screen framing and requests natural zoom on supported existing camera tracks. Canvas cleanup now removes the actual engine canvas even if an external module moved it. New modules are `src/ar/camera-view.js` and `src/ar/photo.js`; tests are in `tests/camera.test.mjs` and `tests/browser/camera-experience.spec.ts`.
+
+Capture now requests camera + virtual objects through 8th Wall's documented CanvasScreenshot module, suppresses helper meshes and validates/downloads the engine's actual JPEG/PNG. Unsupported APIs, rejection, timeout and cancellation are visible. The AR launch is now the landing page's primary action, with a collapsed optional browser demo, clear Studio fallback and revised metadata/social artwork. No deployment was performed.

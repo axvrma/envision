@@ -18,7 +18,7 @@ The npm registry reported version **1.0.0** for each existing package. Each exac
 
 These sizes describe script text, not total startup traffic. The engine package's reported unpacked size was 30,986,202 bytes and it loads additional binary/chunk resources. Delivery does not establish successful initialization, permission handling, SLAM performance, or future CDN availability. No production credentials were supplied or invented.
 
-The retained integration uses `window.THREE`, `GlTextureRenderer`, `Threejs`, `XrController`, and XRExtras FullWindowCanvas. Landing Page remains loaded for compatibility with the existing script set, but the new preflight owns startup and errors, so the old Landing Page/Loading/RuntimeError UI modules are no longer installed. World tracking is not replaced by a simulation.
+The retained integration uses `window.THREE`, `GlTextureRenderer`, `Threejs`, `XrController`, and an application-owned camera viewport module. XRExtras remains loaded for compatibility, but FullWindowCanvas is replaced after auditing its sizing/reparenting behavior. Landing Page remains loaded for compatibility with the existing script set, but the new preflight owns startup and errors, so the old Landing Page/Loading/RuntimeError UI modules are no longer installed. World tracking is not replaced by a simulation.
 
 ## Public service and license state
 
@@ -53,8 +53,8 @@ Primary sources checked:
 | Anchoring | Session-local world transforms; end on reference-space reset | Engine session world coordinates; scale/tracking accuracy depends on runtime |
 | Persistent anchors | Not implemented or promised | Not implemented or promised |
 | Selection | Raycast via active XR view camera; accessible selector alternative | Raycast via engine camera; accessible selector alternative |
-| Combined camera capture | Not implemented | Not implemented; engine screenshot API has not been integrated or validated |
-| Capture alternative | Application-owned virtual objects only, labeled | Same, excluding engine scene/background resources |
+| Combined camera capture | Camera access not integrated; disabled with an explanation | Public CanvasScreenshot module + takeScreenshot; real camera output still needs physical-device validation |
+| Capture alternative | Explicitly requested, labeled virtual-only PNG | Same secondary export; never a silent substitute for failed camera capture |
 | End/background/context loss | Cancel hit source, end session, dispose renderer/listeners/models | Stop XR8, clear pipeline modules, dispose application resources |
 
 DOM overlay is required because all primary accessible placement controls live in the DOM. If a device reports immersive AR but rejects that feature set, startup fails visibly and the user can use Studio. No automatic session retry or second permission request is made after denial.
@@ -78,3 +78,18 @@ The user reported worse tracking on a physical phone using 8th Wall. The follow-
 The fixed-per-frame interpolation is replaced by time-based smoothing (20ms for larger movements, 45ms for small movements), a 2mm jitter deadband and stability checks for jumps. Synthetic tests compare 30/60Hz behavior, jitter, target changes and loss; these do not establish improvement on the user's physical phone. The camera pose and already-placed objects are never artificially smoothed.
 
 The manual AR library previously rendered its thumbnails through temporary WebGL contexts during the camera session. It now serves gold form PNGs generated from the same factories. A browser regression checks that opening the library and changing palette colors creates zero additional WebGL contexts. This removes application-side graphics contention without introducing a new SLAM vendor or making unsupported claims about perfect tracking.
+
+## Camera zoom and viewfinder capture follow-up
+
+The old app changed the 8th Wall renderer pixel ratio in `onStart` while XRExtras FullWindowCanvas separately resized the camera drawing buffer and could reparent the canvas into `body`. This introduced conflicting size ownership and also left the camera canvas outside application-container cleanup. The replacement viewport module fits the complete camera aspect in the available window by default, caps buffer density before engine processing and keeps the canvas in the application container. Fill-screen cropping is optional. Renderer pixel ratio and tracked projection remain engine-owned. A camera track's supported zoom is requested at natural 1× through the already-granted stream; no second camera or permission prompt is opened. Hardware lens selection is not overridden through undocumented APIs.
+
+The public CanvasScreenshot API is now integrated for camera + object capture where present. It is distinct from capturing a transparent WebGL canvas or manufacturing a background. The module is optional so an unavailable/broken photo API does not prevent AR startup. The current WebXR path still does not expose camera photo pixels.
+
+Primary sources for this follow-up:
+
+- [XRExtras FullWindowCanvas source (MIT)](https://github.com/8thwall/web/blob/master/xrextras/src/fullwindowcanvasmodule/full-window-canvas-module.ts)
+- [CanvasScreenshot pipeline module](https://8thwall.org/docs/api/engine/canvasscreenshot/pipelinemodule)
+- [Camera/scene screenshot API](https://8thwall.org/docs/api/engine/canvasscreenshot/takescreenshot)
+- [Screenshot size/quality configuration](https://8thwall.org/docs/api/engine/canvasscreenshot/configure)
+
+Mocked browser tests verify simulated camera-background/model pixels, helper exclusion, valid image downloads, framing aspect in both orientations, failure/unsupported behavior and cancellation. They do not establish actual optical FOV, physical camera fidelity or JPEG composition on the user's device; those remain checklist items.

@@ -18,7 +18,9 @@ The marketing website/Studio (Vite, React, TypeScript, React Three Fiber) and ca
 | `src/ar/adapters.js` | Capability detection, real WebXR and 8th Wall lifecycle/tracking adapters |
 | `src/ar/tracking.js` | Time-based target filtering, stability/jump checks and native surface-result validation |
 | `src/ar/renderer.js` | Incremental Three.js model reconciliation, animation wrappers, ghost previews, reticle, raycast, selection cue |
-| `src/ar/capture.js` | Virtual-only snapshot of application models/lights; excludes engine-owned camera resources |
+| `src/ar/camera-view.js` | Aspect-preserving camera viewport/lifecycle, optional deliberate crop and supported natural-zoom reset |
+| `src/ar/photo.js` | Public engine screenshot orchestration, image validation, helper suppression, timeout/cancellation |
+| `src/ar/capture.js` | Explicit secondary virtual-only export |
 | `website/src/lib/scene.ts` | React adapter around the same SceneStore; browser camera controls |
 | `website/src/components/SavedScenes.tsx` | Mount/unmount shared scene manager in Studio |
 | `website/src/Studio.tsx`, `components/scene/` | Manual Studio UI and lazy R3F rendering |
@@ -43,7 +45,7 @@ The placement controller never manufactures a pose. Invalid coordinates, missing
 
 Tracking updates only adjust transient controller pose and Three.js preview transforms. Tracking status changes update the lightweight guidance UI. Full scene/object-list reconciliation occurs on mutations or selection changes, avoiding repeated rebuilding during tracking-state flicker. Object scale/yaw are finite and bounded. Two-pointer gestures preview directly on Three.js wrappers and commit one domain mutation on release; pointer cancellation restores saved state. Single-pointer movement uses explicit Move mode rather than an untracked drag plane.
 
-WebXR requests required hit-test and DOM-overlay features, filters horizontal poses, and ends on reference-space reset. 8th Wall retains the original SLAM pipeline but checks NORMAL tracking, removes stale-target holding, and configures documented absolute units. The old `allowedDevices: ANY` configuration is replaced by the documented world-tracking-capable mobile/headset class/default. FullWindowCanvas remains engine-owned; application preflight now owns loading/error UI. See [engine audit](AR-CAPABILITY-AUDIT.md) for the reason and limitations of each change.
+WebXR requests required hit-test and DOM-overlay features, filters horizontal poses, and ends on reference-space reset. 8th Wall retains the original SLAM pipeline but checks NORMAL tracking, removes stale-target holding, and configures documented absolute units. The old `allowedDevices: ANY` configuration is replaced by the documented world-tracking-capable mobile/headset class/default. The app camera-viewport module replaces XRExtras FullWindowCanvas: it preserves the full video aspect by default, keeps the canvas in its application container, and supplies bounded pixel dimensions through the engine lifecycle. The engine owns the renderer pixel ratio/projection; the app does not change that ratio after initialization. Application preflight owns loading/error UI. See [engine audit](AR-CAPABILITY-AUDIT.md) for the reason and limitations of each change.
 
 ## Coordinates and rendering
 
@@ -53,7 +55,7 @@ The browser Studio renders all metre coordinates and model geometry at a common 
 
 Reconciliation replaces a model only when type/color changes; transforms update existing groups. Geometry/material disposal de-duplicates shared resources within a model. AR prefers SDK detected/estimated horizontal surface hits when available and labels the ray/ground-plane fallback. Both adapters use a 2mm jitter deadband, time-based 20/45ms smoothing, three fresh samples and a 35cm jump guard. Camera/world-object transforms are never smoothed. Fresh 8th Wall poses and refreshed projection inverses avoid casting rays with a stale camera matrix.
 
-AR shadows are disabled to avoid expensive mobile shadow passes. DPR is capped at 1.6. AR thumbnails are generated from the exact model factories during development and served as static PNGs, so palette/library interaction creates no extra WebGL context while tracking. Studio thumbnails retain a three-color runtime cache and immediate renderer/context disposal. Capture creates a temporary bounded renderer only after an explicit tap.
+AR shadows are disabled to avoid expensive mobile shadow passes. WebXR DPR and the 8th Wall viewport pixel density are capped at 1.6; the 8th Wall renderer pixel ratio is left engine-owned. AR thumbnails are generated from the exact model factories during development and served as static PNGs, so palette/library interaction creates no extra WebGL context while tracking. Studio thumbnails retain a three-color runtime cache and immediate renderer/context disposal. Capture creates a temporary bounded renderer only after an explicit tap.
 
 ## History and persistence
 
@@ -78,7 +80,9 @@ IndexedDB database `envision-playground` v1 has a `scenes` store keyed by record
 
 ## Capture boundary
 
-Neither adapter claims combined camera capture. Capture renders a fresh scene containing only clones of application-owned model groups and lights. It never renders the engine's scene/background, reads a video element or accesses a camera texture. The exported image has an explicit virtual-only label. Temporary URLs/renderers are cleaned up; native sharing is gated on `canShare({files})`. Capture does not add a backend or upload action.
+8th Wall installs `XR8.CanvasScreenshot.pipelineModule()` when available and configures max dimension 1920 / JPEG quality 90. Capture requests the public `takeScreenshot()` API to include the actual camera feed and virtual scene. DOM UI is not drawn into the engine canvas. A capture flag suppresses reticle, ghost and selection geometry throughout the asynchronous screenshot, including intervening preview frames. The original flag is restored on success/error/abort; output is validated as JPEG/PNG and decoded before display where supported. The filename/MIME follow the actual returned format. Pending capture is cancelled on session termination and late results cannot reopen a closed preview. No frame uploads are added.
+
+WebXR camera capture remains unsupported in this integration; the app does not infer camera access from `canvas.toDataURL`. Engines without the public screenshot module explicitly disable AR photos. A separately requested objects-only export renders only application-owned models/lights and labels the result; it never substitutes for a failed camera photo. Temporary URLs/renderers/bitmaps are cleaned up; native sharing is gated on `canShare({files})`.
 
 ## Lifecycle, UI and deployment
 
@@ -88,4 +92,8 @@ Native modal dialogs provide Escape handling and focus restoration; a shared Tab
 
 Background/page exit aborts speech and ends AR. End/error/context loss removes event listeners, cancels WebXR hit sources, stops the engine, disposes application models/renderer, and clears camera presentation. Resume requires explicit startup and a new placement origin. No permission request occurs during capability detection, library browsing or scene saving.
 
-Vite builds `dist/` first; Webpack cleans/builds only `dist/ar/`; finalization emits the Studio/Technology static entry documents, metadata, sitemap and old-worker retirement script. AR registers `/ar/sw.js` only for `/ar/`; shell navigation is network-first, hashed assets are cache-first, external requests are not intercepted. Worker v4 replaces earlier Envision AR caches without deleting unrelated origin caches. Netlify retains route rules, security/permission headers, hashed-asset immutable caching and no-cache worker policy. No remote change or deployment is performed.
+Vite builds `dist/` first; Webpack cleans/builds only `dist/ar/`; finalization emits the Studio/Technology static entry documents, metadata, sitemap and old-worker retirement script. AR registers `/ar/sw.js` only for `/ar/`; shell navigation is network-first, hashed assets are cache-first, external requests are not intercepted. Worker v5 replaces earlier Envision AR caches without deleting unrelated origin caches. Netlify retains route rules, security/permission headers, hashed-asset immutable caching and no-cache worker policy. No remote change or deployment is performed.
+
+## AR-first landing page
+
+The hero primary action launches `/ar/`; its supporting text describes camera placement/customization/capture. The secondary action explains the AR workflow. Browser Studio is identified as a camera-free fallback, and inline command/demo controls are collapsed by default and revealed through the optional preview summary. Hero controls remain functional when expanded. Page titles, metadata and social artwork follow AR Experience positioning.

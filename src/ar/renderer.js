@@ -8,6 +8,7 @@ export class ARSceneRenderer {
     this.renderer = renderer;
     this.models = new Map();
     this.previewKey = null;
+    this.capturing = false;
     this.reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -91,15 +92,15 @@ export class ARSceneRenderer {
   }
   highlight() {
     const model = this.models.get(this.selected);
-    this.selection.visible = !!model;
+    this.selection.visible = !!model && !this.capturing;
     if (model) {
       model.updateWorldMatrix(true, true);
       this.selection.setFromObject(model);
     }
   }
   preview(pending, pose, objects = []) {
-    this.reticle.visible = !!pose;
-    this.ghost.visible = !!(pending && pose);
+    this.reticle.visible = !!pose && !this.capturing;
+    this.ghost.visible = !!(pending && pose) && !this.capturing;
     if (pose) this.reticle.position.fromArray(pose.position);
     const key = pending;
     if (key !== this.previewKey) {
@@ -135,8 +136,23 @@ export class ARSceneRenderer {
     this.ghost.rotation.y =
       pending.kind === "move" ? 0 : (pose.rotation * Math.PI) / 180;
   }
+  setCapturing(value) {
+    this.capturing = value;
+    if (value) {
+      this.reticle.visible = false;
+      this.ghost.visible = false;
+      this.selection.visible = false;
+    } else this.highlight();
+  }
   select(clientX, clientY) {
     const rect = this.renderer.domElement.getBoundingClientRect();
+    if (
+      clientX < rect.left ||
+      clientX > rect.right ||
+      clientY < rect.top ||
+      clientY > rect.bottom
+    )
+      return null;
     let camera = this.renderer.xr?.isPresenting
       ? this.renderer.xr.getCamera(this.camera)
       : this.camera;

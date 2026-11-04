@@ -22,6 +22,9 @@ let adapter,
   speechTimer = null,
   listening = false,
   captureBlob = null,
+  captureGeneration = 0,
+  captureFilename = "envision-ar.jpg",
+  captureTitle = "Envision · AR photo",
   captureURL = null,
   deferredInstall = null;
 const colors = Object.keys(COLORS).filter((color) => color !== "grey");
@@ -247,6 +250,11 @@ function renderController() {
   $("preflight").classList.toggle("hidden", c.active);
   $("start-ar-btn").disabled = c.starting || c.stopping;
   $("retry-ar-btn").disabled = c.starting || c.stopping;
+  $("camera-framing").disabled = typeof adapter?.setFraming !== "function";
+  $("camera-framing-note").textContent =
+    typeof adapter?.setFraming === "function"
+      ? "Full frame shows the complete camera image. Fill screen crops its edges to cover the screen."
+      : "This device’s immersive AR session controls its camera framing.";
   $("start-ar-btn").classList.toggle("hidden", c.active);
   $("start-ar-btn").firstChild.textContent = c.starting
     ? "Starting camera…"
@@ -491,6 +499,8 @@ $("mic-btn").onclick = () => {
   }
 };
 function releaseCapture() {
+  captureGeneration++;
+  adapter?.photoAbort?.abort();
   if (captureURL) URL.revokeObjectURL(captureURL);
   captureURL = null;
   captureBlob = null;
@@ -498,47 +508,78 @@ function releaseCapture() {
   $("capture-preview").classList.add("hidden");
   $("capture-results").classList.add("hidden");
 }
-$("capture-btn").onclick = () => {
-  $("capture-feedback").textContent = controller?.active
-    ? ""
-    : "Start AR to render objects from the current view.";
-  $("render-capture-btn").disabled = !controller?.active;
-  openSheet("capture-sheet");
-};
-$("render-capture-btn").onclick = async () => {
+function updateCaptureControls() {
+  const camera = !!(controller?.active && adapter?.canCaptureCamera);
+  $("render-capture-btn").disabled = !camera;
+  $("objects-capture-btn").disabled = !controller?.active;
+  $("capture-description").textContent = camera
+    ? "Take a photo of the camera view with your placed objects. Application controls and placement guides are excluded. Photos stay on your device unless you choose to share them."
+    : controller?.active
+      ? "This AR runtime does not expose camera photos. You can export a clearly labeled image of virtual objects only; it does not include the camera view."
+      : "Start AR to capture the camera view with your placed objects.";
+}
+async function takeCapture(camera) {
+  releaseCapture();
+  const generation = captureGeneration;
+  $("render-capture-btn").disabled = true;
+  $("objects-capture-btn").disabled = true;
+  $("capture-feedback").textContent = camera
+    ? "Capturing camera and objects…"
+    : "Rendering virtual objects…";
   try {
-    $("render-capture-btn").disabled = true;
-    releaseCapture();
-    captureBlob = await captureObjects(adapter);
-    captureURL = URL.createObjectURL(captureBlob);
+    const blob = camera
+      ? await adapter.capturePhoto()
+      : await captureObjects(adapter);
+    if (generation !== captureGeneration || !$("capture-sheet").open) return;
+    captureBlob = blob;
+    captureFilename = camera
+      ? blob.type === "image/png"
+        ? "envision-ar.png"
+        : "envision-ar.jpg"
+      : "envision-objects-only.png";
+    captureTitle = camera
+      ? "Envision · AR photo"
+      : "Envision · Virtual objects only";
+    captureURL = URL.createObjectURL(blob);
     $("capture-preview").src = captureURL;
+    $("capture-preview").alt = camera
+      ? "Camera view with placed virtual objects"
+      : "Virtual objects only. Camera background excluded.";
     $("capture-preview").classList.remove("hidden");
     $("capture-results").classList.remove("hidden");
-    $("capture-feedback").textContent =
-      "Virtual objects only. Camera background excluded.";
-    const file = new File([captureBlob], "envision-objects-only.png", {
-      type: "image/png",
-    });
+    $("capture-feedback").textContent = camera
+      ? "Camera view and objects captured. Nothing has been uploaded."
+      : "Virtual objects only. Camera background excluded.";
+    const file = new File([blob], captureFilename, { type: blob.type });
     $("share-capture-btn").disabled = !navigator.canShare?.({ files: [file] });
   } catch (error) {
-    $("capture-feedback").textContent = error.message;
+    if (generation === captureGeneration)
+      $("capture-feedback").textContent =
+        error.message || "The camera could not capture this photo. Try again.";
   } finally {
-    $("render-capture-btn").disabled = !controller?.active;
+    if (generation === captureGeneration) updateCaptureControls();
   }
+}
+$("capture-btn").onclick = () => {
+  releaseCapture();
+  $("capture-feedback").textContent = "";
+  updateCaptureControls();
+  openSheet("capture-sheet");
+  if (controller?.active && adapter?.canCaptureCamera) void takeCapture(true);
 };
+$("render-capture-btn").onclick = () => takeCapture(true);
+$("objects-capture-btn").onclick = () => takeCapture(false);
 $("download-capture-btn").onclick = () => {
-  if (captureBlob) downloadBlob(captureBlob, "envision-objects-only.png");
+  if (captureBlob) downloadBlob(captureBlob, captureFilename);
 };
 $("share-capture-btn").onclick = async () => {
   if (!captureBlob) return;
   try {
     await navigator.share({
       files: [
-        new File([captureBlob], "envision-objects-only.png", {
-          type: "image/png",
-        }),
+        new File([captureBlob], captureFilename, { type: captureBlob.type }),
       ],
-      title: "Envision · Virtual objects only",
+      title: captureTitle,
     });
   } catch (error) {
     if (error.name !== "AbortError")
@@ -546,6 +587,8 @@ $("share-capture-btn").onclick = async () => {
         "Sharing is unavailable. Download the image instead.";
   }
 };
+$("camera-framing").onchange = (event) =>
+  run(() => adapter?.setFraming?.(event.target.value));
 $("start-ar-btn").onclick = () =>
   run(async () => {
     if (controller.active || controller.starting || controller.stopping) return;

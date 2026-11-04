@@ -282,6 +282,19 @@
           </div>
           <button data-close aria-label="Close scene actions">×</button>
         </div>
+        <label class="search-label"
+          >Camera framing<select
+            id="camera-framing"
+            aria-label="Camera framing"
+          >
+            <option value="fit">Full frame · wider view</option>
+            <option value="fill">Fill screen · cropped edges</option>
+          </select></label
+        >
+        <p id="camera-framing-note" class="sheet-note">
+          Full frame shows the complete camera image. Fill screen crops its
+          edges to cover the screen.
+        </p>
         <div class="action-grid">
           <button id="undo-btn">Undo</button><button id="redo-btn">Redo</button
           ><button id="saved-btn">Save / open scenes</button
@@ -331,27 +344,21 @@
         <div class="sheet-heading">
           <div>
             <span class="sheet-kicker">KEEP A LITTLE OF THE MAGIC</span>
-            <h2 id="capture-title">Capture objects</h2>
+            <h2 id="capture-title">Capture your world</h2>
           </div>
           <button data-close aria-label="Close capture">×</button>
         </div>
-        <p class="sheet-note">
-          Combined camera capture is unavailable in this release. Render an
-          image of your virtual objects from the current view. The camera
-          background and application controls are excluded, and the image is
-          labeled accordingly.
+        <p id="capture-description" class="sheet-note">
+          Take a photo of the camera view with your placed objects. Application
+          controls and placement guides are excluded. Photos stay on your device
+          unless you choose to share them.
         </p>
-        <button id="render-capture-btn" class="primary">
-          Render objects only
-        </button>
+        <button id="render-capture-btn" class="primary">Take AR photo</button>
+        <button id="objects-capture-btn">Export objects only</button>
         <p id="capture-feedback" role="status"></p>
-        <img
-          id="capture-preview"
-          class="hidden"
-          alt="Virtual objects only. Camera background excluded."
-        />
+        <img id="capture-preview" class="hidden" alt="Captured AR photo" />
         <div id="capture-results" class="action-grid hidden">
-          <button id="download-capture-btn">Download PNG</button
+          <button id="download-capture-btn">Download photo</button
           ><button id="share-capture-btn">Share image</button>
         </div>
       </dialog>

@@ -50,14 +50,14 @@ function Header() {
           className={open ? "nav-links open" : "nav-links"}
           aria-label="Main navigation"
         >
-          <a href="/experience">Experience</a>
+          <a href="/experience">Browser Studio</a>
           <a href="/#how-it-works">How it works</a>
           <a href="/technology">Technology</a>
           <a href={REPO} target="_blank" rel="noreferrer">
             GitHub <ArrowUpRight size={12} />
           </a>
         </nav>
-        <a className="nav-launch" href="/ar">
+        <a className="nav-launch" href="/ar/">
           Launch AR <ArrowUpRight size={15} />
         </a>
         <button
@@ -80,8 +80,8 @@ export function Footer() {
         <p>Choose it. Place it. Play.</p>
       </div>
       <nav aria-label="Footer navigation">
-        <a href="/experience">Experience</a>
-        <a href="/ar">AR</a>
+        <a href="/experience">Browser Studio</a>
+        <a href="/ar/">AR</a>
         <a href="/technology">Technology</a>
         <a href={REPO}>GitHub</a>
         <a href={`${REPO}/issues`}>Issues</a>
@@ -126,11 +126,15 @@ function Home() {
   const scene = useScene();
   const reduced = !!useReducedMotion();
   const [step, setStep] = useState(0);
+  const [demoOpen, setDemoOpen] = useState(false);
   const [gallery, setGallery] = useState(initialGallery);
   return (
     <>
       <main id="main-content">
-        <section className="hero wrap" aria-labelledby="hero-title">
+        <section
+          className={`hero wrap ${demoOpen ? "demo-open" : ""}`}
+          aria-labelledby="hero-title"
+        >
           <div className="hero-copy">
             <motion.div
               initial={reduced ? false : { opacity: 0, y: 12 }}
@@ -139,7 +143,7 @@ function Home() {
               className="eyebrow"
             >
               <span className="status-dot" /> INTRODUCING ENVISION{" "}
-              <span className="eyebrow-divider" /> AR PLAYGROUND
+              <span className="eyebrow-divider" /> AUGMENTED REALITY
             </motion.div>
             <motion.h1
               id="hero-title"
@@ -149,7 +153,7 @@ function Home() {
             >
               Your world.
               <br />
-              <span>A new reality.</span>
+              <span>Reimagined.</span>
             </motion.h1>
             <motion.div
               initial={reduced ? false : { opacity: 0, y: 16 }}
@@ -157,24 +161,27 @@ function Home() {
               transition={{ duration: 0.7, delay: 0.25 }}
             >
               <p className="hero-description">
-                Choose a form. Make it yours.
-                <br />
-                Bring it into your space with augmented reality.
+                Launch your camera. Bring 3D objects into the space around you.
+                Place, customize, and capture a little of the extraordinary.
               </p>
               <div className="hero-actions">
-                <a href="/experience" className="button primary">
-                  Try the Experience <ArrowUpRight size={18} />
+                <a href="/ar/" className="button primary">
+                  <ScanLine size={18} /> Launch AR Experience{" "}
+                  <ArrowUpRight size={18} />
                 </a>
-                <a href="/ar" className="button secondary">
-                  <ScanLine size={17} /> Launch AR
+                <a href="#how-it-works" className="text-link hero-how-link">
+                  See how it works <ArrowRight size={15} />
                 </a>
               </div>
               <p className="device-note">
-                <span className="tiny-ring" /> No headset required. Just a
-                little curiosity.
+                <span className="tiny-ring" /> No account. No app store. Just
+                your phone and a little curiosity.
               </p>
               <p className="compat-note">
-                Compatible device and permissions needed for AR.
+                Camera AR needs a compatible phone.{" "}
+                <a href="/experience">
+                  Need a camera-free option? Open browser Studio ↗
+                </a>
               </p>
             </motion.div>
           </div>
@@ -184,7 +191,8 @@ function Home() {
             <span className="spatial-cross cross-one">+</span>
             <span className="spatial-cross cross-two">+</span>
             <div className="scene-corner">
-              <span className="status-dot" /> LIVE IN YOUR BROWSER
+              <span className="status-dot" /> 3D PREVIEW · LAUNCH AR FOR YOUR
+              CAMERA
             </div>
             <div className="object-coordinate">
               OBJECT / {scene.objects[0]?.type.toUpperCase() || "EMPTY"}
@@ -224,16 +232,22 @@ function Home() {
                   : "Your next idea"}
                 <small>
                   {scene.objects.length
-                    ? "FROM A FEW WORDS TO 3D"
+                    ? "BRING IT INTO YOUR SPACE"
                     : "THE POSSIBILITIES ARE OPEN"}
                 </small>
               </span>
               <Check size={14} />
             </div>
           </div>
-          <div className="hero-command">
+          <details
+            className="hero-command"
+            onToggle={(event) => setDemoOpen(event.currentTarget.open)}
+          >
+            <summary>
+              Try an optional 3D preview <span>No camera required</span>
+            </summary>
             <CommandBar onCommand={scene.execute} message={scene.message} />
-          </div>
+          </details>
           <div className="hero-bottom">
             <a href="#possibilities">
               <ChevronDown size={13} /> SCROLL TO DISCOVER
@@ -274,8 +288,9 @@ function Home() {
               didn’t stay in your head?
             </h2>
             <p>
-              Turn your imagination into something you can see. Choose an object,
-              bring a 3D object to life, and place it in the world around you.
+              Turn your imagination into something you can see. Choose an
+              object, bring a 3D object to life, and place it in the world
+              around you.
             </p>
           </div>
           <div className="story-grid">
@@ -302,11 +317,12 @@ function Home() {
               </div>
               <h3>Say it. See it.</h3>
               <p>
-                A color. An object. A moment of magic. Optional voice commands bring the
-                model library to life. Manual controls are always available.
+                A color. An object. A moment of magic. Optional voice commands
+                bring the model library to life. Manual controls are always
+                available.
               </p>
-              <a className="text-link" href="/experience">
-                Find your first creation <ArrowUpRight size={15} />
+              <a className="text-link" href="/ar/">
+                Create with your camera <ArrowUpRight size={15} />
               </a>
             </article>
             <article className="world-story">
@@ -330,7 +346,7 @@ function Home() {
                   supported devices, your creation stays in place as your
                   perspective changes.
                 </p>
-                <a className="text-link" href="/ar">
+                <a className="text-link" href="/ar/">
                   Bring it into your space <ArrowUpRight size={15} />
                 </a>
               </div>
@@ -344,8 +360,8 @@ function Home() {
                 <span className="eyebrow">03 / ROOM FOR POSSIBILITY</span>
                 <h2>Imagination has dimension.</h2>
               </div>
-              <a className="text-link" href="/experience">
-                Explore the object library <ArrowUpRight size={17} />
+              <a className="text-link" href="/ar/">
+                Choose your first AR object <ArrowUpRight size={17} />
               </a>
             </div>
             <div className="library-showcase">
@@ -401,7 +417,7 @@ function Home() {
               {[
                 {
                   title: "Open",
-                  text: "Launch Envision on a compatible device. No headset, no app store.",
+                  text: "Launch AR and allow camera access when you’re ready. No account or app download.",
                 },
                 {
                   title: "Choose",
@@ -447,7 +463,7 @@ function Home() {
                       <br />
                       Reimagined.
                     </strong>
-                    <a href="/ar" className="button primary">
+                    <a href="/ar/" className="button primary">
                       Start exploring <ArrowUpRight size={15} />
                     </a>
                   </>
@@ -497,7 +513,7 @@ function Home() {
               AR engine.
             </p>
           </div>
-          <a href="/ar" className="button secondary">
+          <a href="/ar/" className="button secondary">
             Meet your new reality <ArrowUpRight size={17} />
           </a>
         </section>
@@ -526,7 +542,9 @@ function Home() {
                 Report an Issue <ArrowUpRight size={14} />
               </a>
             </div>
-            <span className="source-license">axvrma/envision · ISC LICENSE</span>
+            <span className="source-license">
+              axvrma/envision · ISC LICENSE
+            </span>
           </div>
         </section>
         <section className="final-cta">
@@ -551,16 +569,16 @@ function Home() {
           </div>
           <div className="final-orbit" />
           <div className="final-star">✦</div>
-          <span className="eyebrow">SPEAK IT. SEE IT. EXPERIENCE IT.</span>
+          <span className="eyebrow">OPEN YOUR CAMERA. OPEN A POSSIBILITY.</span>
           <h2>
             The world is yours
             <br />
             to imagine.
           </h2>
-          <p>Your next creation is a tap away.</p>
+          <p>Your next perspective is one camera away.</p>
           <div className="hero-actions">
-            <a href="/ar" className="button primary">
-              Launch Envision <ArrowUpRight size={17} />
+            <a href="/ar/" className="button primary">
+              Launch AR Experience <ArrowUpRight size={17} />
             </a>
             <a href={REPO} className="text-link">
               Explore on GitHub <ArrowUpRight size={16} />
@@ -580,7 +598,7 @@ export default function App() {
         ? "3D Playground"
         : route === "/technology"
           ? "Technology"
-          : "AR Playground";
+          : "AR Experience";
     document.title = `Envision — ${title}`;
   }, [route]);
   return (

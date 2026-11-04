@@ -11,8 +11,8 @@ const html = await fs.readFile("dist/index.html", "utf8");
 const pages = [
   [
     "",
-    "Envision — AR Playground",
-    "Envision is an AR playground. Choose, place, customize and save 3D objects in your world. Voice is optional.",
+    "Envision — AR Experience",
+    "Launch Envision AR in your mobile browser. Place and customize 3D objects in your space, then capture your camera view on supported devices.",
   ],
   [
     "experience",

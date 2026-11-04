@@ -55,7 +55,8 @@ Do not force an apparent pass by injecting mock tracking into these physical tes
 - [ ] Open a Studio-saved scene in AR on the same origin/browser. Objects do not appear before origin confirmation; relative arrangement and model sizes match.
 - [ ] End/restart camera or reopen after moving rooms: the composition requires a new placement origin; old physical coordinates/history are not restored.
 - [ ] Test private mode/denied storage/quota exhaustion. Show a useful error and retain JSON export as an alternative. Delete stored data to verify missing-scene handling.
-- [ ] Capture clearly offers objects-only export. PNG contains virtual objects, dark background and explicit label; no camera pixels, reticle, selection frame, preview or application controls.
+- [ ] On supported 8th Wall, Capture includes the actual camera view and placed objects. Check alignment, orientation, full-frame/fill aspect and JPEG/PNG fidelity. DOM controls, reticle, selection frame and placement ghosts must be absent.
+- [ ] On WebXR/unsupported screenshot APIs, explain camera-photo unavailability and keep the secondary objects-only export explicitly labeled. Rejected camera capture must not silently show an objects-only image.
 - [ ] Download works; native share appears only with file sharing support, can be cancelled and handles failure. No image uploads occur automatically.
 
 ## Accessibility, orientation and resources
@@ -76,3 +77,11 @@ Sign-off must identify the tested device/browser/engine combinations and unresol
 - [ ] Test slow aiming, quick aiming, floor/table transitions and tracking loss. The preview must not glide between unrelated surfaces or enable confirmation during LIMITED tracking.
 - [ ] Open Scene actions, disconnect/interrupt the camera, and confirm the failure notification replaces the sheet and offers a working retry. Stop the camera frame stream to verify the eight-second failure path; an ordinary scan without a surface hit must stay active.
 - [ ] At 412×924 and after portrait/landscape changes, check every sheet's close button and content without horizontal clipping, including the saved-scene manager and failure notification.
+
+## Camera framing and AR-first entry
+
+- [ ] On the reported phone, compare Full frame with the native camera: the whole AR video aspect should fit with margins rather than crop to a tall screen. Check portrait/landscape rotation, browser bars and device cutouts.
+- [ ] If the browser exposes camera zoom, verify an initial zoomed track returns to natural 1×; record lens/optics limitations if the browser does not expose it.
+- [ ] Switch Full frame / Fill screen during a session. Projection, hit targets, selected-object raycasts and captured photos must remain aligned; world object transforms must not reset.
+- [ ] Take a photo with and without placed objects, while a ghost/selection is visible. Confirm the real background and models are captured without guides/UI. Test download and native share, error/timeout and closing/ending during a pending shot.
+- [ ] The landing page must lead clearly to Launch AR Experience, request no camera permission before Start, and retain an optional camera-free browser demo/Studio fallback.

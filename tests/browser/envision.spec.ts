@@ -7,12 +7,13 @@ test("hero renders a real WebGL scene, supports suggestions, invalid commands an
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Your world.A new reality.",
+    "Your world.Reimagined.",
   );
   await expect(page.getByTestId("scene").first()).toHaveAttribute(
     "data-ready",
     "true",
   );
+  await page.locator(".hero-command > summary").click();
   await page.getByRole("button", { name: "blue bird", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Created blue bird");
   await expect(page.locator(".object-tag")).toContainText("blue bird");
@@ -52,7 +53,7 @@ test("navigation, technology and accurate GitHub links", async ({ page }) => {
     page.getByRole("heading", { name: "8th Wall", exact: true }),
   ).toBeVisible();
   await page
-    .getByRole("link", { name: "Experience", exact: true })
+    .getByRole("link", { name: "Browser Studio", exact: true })
     .first()
     .click();
   await expect(page).toHaveURL(/experience/);
@@ -108,6 +109,7 @@ test("microphone unsupported and denied states keep text functional", async ({
     });
   });
   await page.goto("/");
+  await page.locator(".hero-command > summary").click();
   await page
     .getByRole("button", { name: "Speak a command", exact: true })
     .click();
@@ -148,6 +150,7 @@ test("mock speech handles denied, successful and silent recognition", async ({
     };
   });
   await page.goto("/");
+  await page.locator(".hero-command > summary").click();
   await page
     .getByRole("button", { name: "Speak a command", exact: true })
     .click();
@@ -179,6 +182,7 @@ test("WebGL unavailable leaves useful feedback and working commands", async ({
   await expect(
     page.getByText("3D rendering is unavailable in this browser.").first(),
   ).toBeVisible();
+  await page.locator(".hero-command > summary").click();
   await page.getByRole("button", { name: "red cube", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Created red cube");
 });
@@ -254,7 +258,7 @@ test("mobile navigation, studio controls and pages fit the viewport", async ({
   await page.goto("/");
   await page.getByRole("button", { name: "Open navigation" }).click();
   await page
-    .getByRole("link", { name: "Experience", exact: true })
+    .getByRole("link", { name: "Browser Studio", exact: true })
     .first()
     .click();
   await page.getByRole("button", { name: "OBJECT LIBRARY" }).click();
@@ -275,6 +279,7 @@ test("keyboard entry and reduced-motion rendering work", async ({ page }) => {
   await expect(
     page.getByRole("link", { name: "Skip to content" }),
   ).toBeFocused();
+  await page.locator(".hero-command > summary").click();
   await page.getByLabel("Object command").focus();
   await page.keyboard.type("purple sphere");
   await page.keyboard.press("Enter");

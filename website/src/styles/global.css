@@ -3401,3 +3401,99 @@ h2 {
 .studio-page .remove-button {
   min-height: 44px;
 }
+
+/* The camera app is the primary journey; the inline demo is optional. */
+.hero-how-link {
+  font-size: 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.hero .compat-note {
+  max-width: 410px;
+  line-height: 1.8;
+}
+.hero .compat-note a {
+  display: block;
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  min-height: 32px;
+  padding-top: 4px;
+}
+details.hero-command > summary {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  background: #100e1f99;
+}
+details.hero-command > summary::-webkit-details-marker {
+  display: none;
+}
+details.hero-command > summary::before {
+  content: "+";
+  color: var(--accent-violet);
+  font-size: 18px;
+}
+details.hero-command[open] > summary::before {
+  content: "−";
+}
+details.hero-command > summary span {
+  margin-left: auto;
+  font: 8px var(--mono);
+  color: #aaa0bc;
+}
+details.hero-command[open] > summary {
+  margin-bottom: 18px;
+}
+@media (max-width: 640px) {
+  .hero .hero-actions {
+    flex-wrap: wrap;
+    gap: 6px 18px;
+  }
+  .hero .hero-actions .primary {
+    font-size: 12px;
+    min-height: 52px;
+    gap: 10px;
+  }
+  .hero .hero-how-link {
+    font-size: 11px;
+  }
+  .hero .device-note {
+    line-height: 1.7;
+    align-items: flex-start;
+    font-size: 9px;
+  }
+  .hero .tiny-ring {
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .hero .compat-note {
+    font-size: 9px;
+    margin-left: 0;
+  }
+  .hero-copy .eyebrow {
+    white-space: normal;
+  }
+  .hero .scene-corner {
+    max-width: 80%;
+    font-size: 7px;
+    line-height: 1.5;
+    text-align: right;
+  }
+}
+
+.hero:not(.demo-open) .scene-tools {
+  display: none;
+}

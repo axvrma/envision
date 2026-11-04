@@ -77,7 +77,8 @@ test("real 8th Wall adapter accepts only NORMAL tracking + finite ground interse
   const renderer = {
     domElement: canvas,
     shadowMap: {},
-    setPixelRatio: (value) => assert.ok(value <= 1.6),
+    setPixelRatio: () =>
+      assert.fail("The app must not override the XR8 renderer pixel ratio"),
     dispose: () => disposed++,
   };
   const XR8 = {

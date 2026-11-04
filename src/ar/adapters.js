@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { ARSceneRenderer } from "./renderer.js";
 import { TrackedTargetFilter, surfaceHitPose } from "./tracking.js";
+import { cameraViewportModule, resetCameraZoom } from "./camera-view.js";
+import { captureCameraPhoto } from "./photo.js";
 const supportedError = (message) =>
   Object.assign(new Error(message), { name: "NotSupportedError" });
 export async function detectEngine() {
@@ -25,6 +27,7 @@ class BaseAdapter {
     this.objects = [];
     this.selected = null;
     this.cleanups = [];
+    this.photoAPI = null;
   }
   attach(scene, camera, renderer) {
     this.scene = scene;
@@ -55,11 +58,21 @@ class BaseAdapter {
   select(x, y) {
     return this.view?.select(x, y) || null;
   }
+  get canCaptureCamera() {
+    return !!(this.view && this.photoAPI);
+  }
+  capturePhoto() {
+    return captureCameraPhoto(this);
+  }
   async stop() {
+    this.photoAbort?.abort();
+    this.photoAPI = null;
+    const canvas = this.renderer?.domElement;
     this.cleanups.splice(0).forEach((fn) => fn());
     this.view?.dispose();
     this.view = null;
     this.container.replaceChildren();
+    canvas?.remove?.();
   }
 }
 export class WebXRAdapter extends BaseAdapter {
@@ -111,9 +124,11 @@ export class WebXRAdapter extends BaseAdapter {
     if (this.stopping) return;
     this.attach(scene, camera, renderer);
     const resize = () => {
-      camera.aspect = innerWidth / innerHeight;
-      camera.updateProjectionMatrix();
-      if (!renderer.xr.isPresenting) renderer.setSize(innerWidth, innerHeight);
+      if (!renderer.xr.isPresenting) {
+        camera.aspect = innerWidth / innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(innerWidth, innerHeight);
+      }
     };
     window.addEventListener("resize", resize);
     this.cleanups.push(() => window.removeEventListener("resize", resize));
@@ -277,6 +292,10 @@ async function loadLibraries() {
   return libraryPromise;
 }
 export class EightWallAdapter extends BaseAdapter {
+  setFraming(mode) {
+    this.framing = mode === "fill" ? "fill" : "fit";
+    this.viewport?.setMode(this.framing);
+  }
   async start(callbacks) {
     this.callbacks = callbacks;
     this.stopping = false;
@@ -291,6 +310,20 @@ export class EightWallAdapter extends BaseAdapter {
     const canvas = document.createElement("canvas");
     canvas.id = "camerafeed";
     this.container.appendChild(canvas);
+    this.viewport = cameraViewportModule(this.container, canvas);
+    this.viewport.setMode(this.framing || "fit");
+    this.cleanups.push(() => this.viewport?.dispose());
+    const snapshot = XR8.CanvasScreenshot;
+    let photoModule = null;
+    if (snapshot?.pipelineModule && snapshot?.takeScreenshot) {
+      try {
+        snapshot.configure?.({ maxDimension: 1920, jpgCompression: 90 });
+        photoModule = snapshot.pipelineModule();
+        this.photoAPI = snapshot;
+      } catch {
+        this.photoAPI = null;
+      }
+    }
     const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
       ray = new THREE.Raycaster(),
       point = new THREE.Vector3();
@@ -336,7 +369,7 @@ export class EightWallAdapter extends BaseAdapter {
         onStart: () => {
           if (this.stopping) return;
           const { scene, camera, renderer } = XR8.Threejs.xrScene();
-          renderer.setPixelRatio(Math.min(devicePixelRatio, 1.6));
+          // XR8 owns the renderer pixel ratio; changing it here desynchronizes its camera viewport.
           this.attach(scene, camera, renderer);
           XR8.XrController.updateCameraProjectionMatrix({
             origin: camera.position,
@@ -452,7 +485,12 @@ export class EightWallAdapter extends BaseAdapter {
             );
         },
         onException: fail,
-        onCameraStatusChange: ({ status }) => {
+        onAttach: ({ stream, video }) => {
+          void resetCameraZoom(stream || video?.srcObject);
+        },
+        onCameraStatusChange: ({ status, stream, video }) => {
+          if (status === "hasStream" || status === "hasVideo")
+            void resetCameraZoom(stream || video?.srcObject);
           if (["failed", "hasVideoError", "hasStreamError"].includes(status))
             fail(
               new Error(
@@ -465,11 +503,15 @@ export class EightWallAdapter extends BaseAdapter {
         XR8.GlTextureRenderer.pipelineModule(),
         XR8.Threejs.pipelineModule(),
         XR8.XrController.pipelineModule(),
-        window.XRExtras.FullWindowCanvas.pipelineModule(),
+        this.viewport.module,
+        ...(photoModule ? [photoModule] : []),
         module,
       ]);
-      // Keep the legacy SLAM pipeline. The new preflight owns loading/error UI instead of XRExtras overlays.
+      // Keep the legacy SLAM pipeline. The app owns camera canvas framing; XR8 keeps camera/projection/render sizing synchronized.
       const config = { canvas };
+      const cameraConfig = XR8.XrConfig?.camera?.();
+      if (cameraConfig?.BACK)
+        config.cameraConfig = { direction: cameraConfig.BACK };
       const devices = XR8.XrConfig?.device?.();
       // ANY permits desktop camera rendering but disables world tracking.
       // Keep a world-tracking-capable device class or the engine's default.

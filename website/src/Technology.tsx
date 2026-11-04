@@ -155,8 +155,8 @@ export default function Technology() {
             action. Third-party AR and speech services have their own processing
             behavior. Envision adds no analytics or visitor tracking.
           </p>
-          <a className="button primary" href="/experience">
-            Explore the playground <ArrowUpRight size={17} />
+          <a className="button primary" href="/ar/">
+            Launch AR Experience <ArrowUpRight size={17} />
           </a>
         </section>
       </main>

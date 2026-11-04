@@ -17,7 +17,7 @@ Clean `npm ci` installed 500 packages and reported **0 vulnerabilities**. No rem
 
 ## Automated coverage
 
-**33 unit/static-output tests** cover:
+**39 unit/static-output tests** cover:
 
 - Shared catalog colors, aliases, longest whole-word command matching, exact clear vocabulary and all ten procedural factories/animations/disposal.
 - Validated creation, object cap, color/transform updates, immutable input, duplicate/remove, duplicate/invalid IDs, unsupported types/colors, finite coordinates, scale/yaw bounds, atomic rejection, bounded undo/redo and redo invalidation.
@@ -27,7 +27,7 @@ Clean `npm ci` installed 500 packages and reported **0 vulnerabilities**. No rem
 - Actual adapter policy with mocked browser/engine objects: WebXR preference, required hit-test + DOM overlay, permission errors, 8th Wall absolute scale, NORMAL-only tracking, consecutive ground intersections, horizon rejection and module/renderer teardown.
 - Production route assets, AR manifest/worker scope, Netlify route/permission config and configurable SEO origin.
 
-**31 Playwright Chromium tests** cover:
+**37 Playwright Chromium tests** cover:
 
 - Real WebGL landing hero, manual Studio library, optional command parsing, selection/inspector transforms, color, replacement/removal/clear, camera orbit/zoom/reset, object bounds and renderer context-loss retry.
 - Navigation, corrected product GitHub links, reduced motion, keyboard entry and axe audits of `/`, `/experience`, `/technology`, `/ar/` plus portrait/landscape library sheets.
@@ -54,7 +54,7 @@ See [raw performance measurements](performance.json), reproducible with `npm run
 - 1,012 domain creation/update operations with a 12-object scene took **19.091ms** in the recorded run; history remained at **40** entries. Export was **2,606 bytes**.
 - Ten create/dispose iterations per catalog item measured mean costs from **0.062ms** (tree) to **4.366ms** (sphere) in that run. They exclude WebGL shader compilation, camera work, tracking, networking and mobile thermal behavior; timing varies by run and warmup.
 - A flock contains **40 mesh draws / 7,640 triangles** before renderer batching/culling effects. Twelve flocks contain **480 meshes / 91,680 triangles**. This is the heaviest catalog scene by mesh count and must be profiled on target phones.
-- AR caps DPR at **1.6** and disables shadow passes. Studio retains its bounded 1024² shadow setup. Model count, history, persisted records, imports and thumbnail cache are bounded. Capture uses a user-triggered temporary renderer at up to 1280×720 image pixels before its label strip; portrait width is reduced to cap height.
+- WebXR DPR / the application 8th Wall viewport buffer density cap at **1.6**; the 8th Wall renderer pixel ratio remains engine-owned. AR disables shadow passes. Studio retains its bounded 1024² shadow setup. Model count, history, persisted records, imports and thumbnail cache are bounded. 8th Wall camera capture uses its existing engine screenshot pipeline with max dimension 1920. The secondary objects-only export uses a temporary renderer at up to 1280×720 image pixels before its label strip; portrait width is reduced to cap height.
 - Tracking frames do not enter history or trigger React. Preview transforms update Three.js directly; preview identity is compared without serializing a saved scene on every frame. Color/type changes dispose and replace model resources. Other mutations reuse groups. AR now uses static thumbnails; runtime Studio thumbnail/capture renderers are disposed after use.
 
 No real-device FPS, memory ceiling, camera drain or heat measurement is available in this environment. The [physical checklist](DEVICE-TEST-CHECKLIST.md) includes repeated startup/exit, worst-catalog scenes, resource counts and camera indicators.
@@ -63,7 +63,7 @@ No real-device FPS, memory ceiling, camera drain or heat measurement is availabl
 
 Android WebXR, supported iOS/Android 8th Wall sessions, camera prompts, absolute-scale acquisition, low-light tracking, real surface stability, immersive-overlay touch gestures, camera/microphone indicators, installed PWA behavior and native file sharing require physical devices. The engine audit verifies documentation/delivery and implements guards; it does not claim the closed binary's processing behavior or every intended use's licensing has been independently validated.
 
-Combined camera capture and persistent real-world anchors are not implemented. Capture offers a labeled virtual-only alternative. Saved compositions need a fresh AR placement origin and remain local to the browser/origin unless manually exported/imported.
+8th Wall camera-inclusive capture is implemented through the public screenshot API and remains physically unverified. WebXR camera photo access and persistent real-world anchors are not implemented. A labeled virtual-only alternative remains explicit. Saved compositions need a fresh AR placement origin and remain local to the browser/origin unless manually exported/imported.
 
 ## Mobile layout, failure notifications and physical 8th Wall follow-up
 
@@ -74,3 +74,9 @@ Runtime/startup errors now replace an open sheet with an accessible alert dialog
 Target-filter tests cover fresh-sample readiness, invalid input, jitter suppression, frame-rate-independent response at 30/60Hz, large jumps, changed surfaces and immediate loss invalidation. Actual adapter tests cover native surface preference and event-only tracking-status delivery. Browser tests confirm target-source labels, disabled placement on LIMITED status and no additional WebGL contexts when opening/recoloring the AR library. Static output tests verify all ten 160×130 PNG model thumbnails are shipped.
 
 These are application-level improvements. The user's reported physical 8th Wall regression still requires testing the updated build on that phone; neither perfect SLAM tracking nor a device FPS improvement is claimed from mocks.
+
+## Camera framing, photos and landing focus follow-up
+
+Six additional unit tests cover full-frame/fill geometry in both orientations, invalid dimensions, bounded drawing buffers, viewport listener/style cleanup, supported natural camera zoom requests, image-payload validation, screenshot helper suppression/restoration and session cancellation. Six additional browser tests cover the primary AR launch journey, full-frame versus optional fill-screen aspect, a simulated camera-background + model JPEG, helper exclusion/download, visible screenshot rejection, unsupported runtime alternatives and pending-shot cancellation/canvas removal. The simulation uses a solid colored scene background; it is explicitly not a camera feed or hardware validation.
+
+The hero's browser demo remains usable behind an optional summary; its camera launch is the primary CTA and navigation identifies Studio as the browser alternative. Metadata/social artwork are updated. Physical checks still need to compare the view with the phone's camera application, verify 1×/lens behavior and confirm real camera + object photo composition on the deployed HTTPS origin.

@@ -1,4 +1,4 @@
-# Envision 2.0 · AR Playground
+# Envision 2.0 · AR Experience
 
 Choose a form. Find a surface. Make room for imagination.
 
@@ -31,7 +31,7 @@ Build before unit/static-output and browser tests: tests also verify the actual 
 
 | Route | Experience |
 | --- | --- |
-| `/` | Original visual language, live 3D hero, AR Playground product copy |
+| `/` | AR-first landing page; prominent Launch AR Experience action, optional collapsed 3D demo |
 | `/experience` | Browser Studio: manual library, orbit/zoom, selection, inspector, voice/text, save/open, undo/redo |
 | `/ar/` | Camera preflight, manual library, tracked preview/confirmation, selection/editing, scene actions, capture alternative |
 | `/technology` | Architecture, capability distinctions, third-party runtime attribution |
@@ -57,9 +57,13 @@ Saved data contains a versioned virtual composition in metres relative to its fi
 
 Limits: 12 live objects, 40 scene mutations in undo history, 50 saved scenes, 100 KB imports, 80-character names, scale 0.2–3, yaw −180°–180°, coordinates within ±20 metres. Imports validate types, color names, IDs, uniqueness, finite transforms, object count, units, and version. Version 1 of the documented metre-based schema migrates to version 2; old tab-only Studio state was never persisted.
 
-## Capture honestly
+## Camera framing and photos
 
-Combined camera + virtual-object capture is **unavailable in this release**. Capture offers **Render objects only**, a new render of application-owned objects from the current camera view against a dark background, labeled “Virtual objects only · Camera excluded.” Reticles, application controls and engine-owned camera textures are excluded. Download PNG, or use native file sharing if the browser supports it. No screenshot is automatically uploaded. A canvas/security failure produces an error rather than a fabricated image.
+8th Wall starts in **Full frame** mode: the camera canvas preserves the video aspect ratio, with dark margins where the screen is taller/wider than the camera image. This avoids the old fill-screen crop being perceived as zoom. Scene actions → Camera framing also offers **Fill screen**, which deliberately crops the edges. The app no longer changes the engine renderer's pixel ratio after initialization. Its viewport module sizes the canvas before the engine consumes its dimensions; supported camera tracks are reset to natural 1× zoom when exposed by the browser. Lens selection/optics remain device-dependent. WebXR retains its device-provided projection.
+
+On 8th Wall runtimes exposing `XR8.CanvasScreenshot`, tapping **Capture** takes a photo containing the camera view and placed virtual objects. Application controls, reticles, selection boxes and placement ghosts are excluded. Preview, download JPEG/PNG as returned by the engine, retake, or use native file sharing when supported. Photos are not automatically saved or uploaded. Failed/blocked/timed-out capture is reported visibly.
+
+WebXR camera pixels are not exposed through the current integration. If an engine lacks camera-photo support, **Take AR photo** is disabled with an explanation. **Export objects only** remains an explicit secondary option: a labeled virtual-only PNG against a dark background. A failed camera photo never silently becomes an objects-only image. Physical 8th Wall camera framing/capture still requires device verification; automated camera images are explicitly simulated.
 
 ## Compatibility and privacy
 

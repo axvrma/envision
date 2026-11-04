@@ -238,7 +238,7 @@ test("saved scenes support validated import/export, rename, duplicate, delete an
     .click();
   await expect(page.locator(".storage-feedback")).toContainText("unavailable");
 });
-test("capture exports a labeled virtual-only image without controls or camera claims", async ({
+test("objects-only export remains clearly labeled as a secondary option", async ({
   page,
 }) => {
   await launchMockAR(page);
@@ -247,14 +247,16 @@ test("capture exports a labeled virtual-only image without controls or camera cl
   await page.getByRole("button", { name: "Place object", exact: true }).click();
   await page.getByRole("button", { name: "Capture options" }).click();
   await expect(
-    page.getByRole("dialog", { name: "Capture objects" }),
-  ).toContainText("camera capture is unavailable");
+    page.getByRole("dialog", { name: "Capture your world" }),
+  ).toContainText("camera view with your placed objects");
   await page
-    .getByRole("button", { name: "Render objects only", exact: true })
+    .getByRole("button", { name: "Export objects only", exact: true })
     .click();
   await expect(page.locator("#capture-preview")).toBeVisible();
   const download = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download PNG", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Download photo", exact: true })
+    .click();
   expect((await download).suggestedFilename()).toBe(
     "envision-objects-only.png",
   );
@@ -304,8 +306,12 @@ test("raycast selection, explicit tracked move, two-pointer gestures and session
       .getCenter(new w.THREE.Vector3())
       .project(w.__arCamera);
     return {
-      x: ((center.x + 1) / 2) * innerWidth,
-      y: ((1 - center.y) / 2) * innerHeight,
+      x:
+        w.__engineCanvas.getBoundingClientRect().left +
+        ((center.x + 1) / 2) * w.__engineCanvas.getBoundingClientRect().width,
+      y:
+        w.__engineCanvas.getBoundingClientRect().top +
+        ((1 - center.y) / 2) * w.__engineCanvas.getBoundingClientRect().height,
     };
   });
   await page.mouse.click(point.x, point.y);
