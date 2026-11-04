@@ -1,25 +1,9 @@
+@import "../../../shared/theme.css";
+@import "../../../shared/ui/sheets.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-:root {
-  font-family: Inter, Arial, sans-serif;
-  color: #f8f7ff;
-  background: #080711;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  --background: #080711;
-  --background-secondary: #100e1f;
-  --surface: #18152b;
-  --border: #302b48;
-  --text-primary: #f8f7ff;
-  --text-secondary: #b8b4ce;
-  --accent-violet: #a78bfa;
-  --accent-indigo: #818cf8;
-  --accent-cyan: #67e8f9;
-  --accent-gold: #f5c76b;
-  --mono: "IBM Plex Mono", monospace;
-}
+
 * {
   box-sizing: border-box;
 }
@@ -3307,4 +3291,113 @@ h2 {
     transform: translateY(0);
   }
 }
-@font-face{font-family:Inter;font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/inter-latin-400-normal.woff2') format('woff2')}@font-face{font-family:Inter;font-style:normal;font-weight:500;font-display:swap;src:url('/fonts/inter-latin-500-normal.woff2') format('woff2')}@font-face{font-family:Inter;font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/inter-latin-600-normal.woff2') format('woff2')}@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/ibm-plex-mono-latin-400-normal.woff2') format('woff2')}.scene-object-list>button>small{color:#c0a4d4}@media(max-width:640px){.section-intro p,.story-grid p,.open-source p,.pwa-section p,.steps p{font-size:12px}.hero-description{font-size:13px}.site-footer nav{font-size:12px}.tech-grid p,.honest-tech p,.architecture>p{font-size:12px}.studio-top>.text-link{font-size:9px}.object-grid span{font-size:9px}.panel-hint{font-size:10px}.scene-object-list>button{font-size:11px}}
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/inter-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/inter-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: Inter;
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/inter-latin-600-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+}
+.scene-object-list > button > small {
+  color: #c0a4d4;
+}
+@media (max-width: 640px) {
+  .section-intro p,
+  .story-grid p,
+  .open-source p,
+  .pwa-section p,
+  .steps p {
+    font-size: 12px;
+  }
+  .hero-description {
+    font-size: 13px;
+  }
+  .site-footer nav {
+    font-size: 12px;
+  }
+  .tech-grid p,
+  .honest-tech p,
+  .architecture > p {
+    font-size: 12px;
+  }
+  .studio-top > .text-link {
+    font-size: 9px;
+  }
+  .object-grid span {
+    font-size: 9px;
+  }
+  .panel-hint {
+    font-size: 10px;
+  }
+  .scene-object-list > button {
+    font-size: 11px;
+  }
+}
+
+.studio-search {
+  width: 100%;
+  min-height: 44px;
+  background: var(--background);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 12px 0;
+  font-size: 11px;
+}
+.studio-persistence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 18px 0;
+}
+.studio-persistence > button {
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 10px;
+  padding: 8px 12px;
+}
+.studio-persistence > button:first-child {
+  flex-basis: 100%;
+  color: var(--accent-violet);
+}
+.object-grid img {
+  height: 70px;
+  width: 100%;
+  object-fit: contain;
+}
+.object-grid button {
+  min-height: 100px;
+}
+.studio-page .color-palette button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.studio-page .scene-object-list button {
+  min-height: 44px;
+}
+.studio-page .remove-button {
+  min-height: 44px;
+}

@@ -1,0 +1,35 @@
+@font-face {
+  font-family: Inter;
+  src: url("/fonts/inter-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: Inter;
+  src: url("/fonts/inter-latin-500-normal.woff2") format("woff2");
+  font-weight: 500 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+  font-display: swap;
+}
+:root {
+  --background: #080711;
+  --background-secondary: #100e1f;
+  --surface: #18152b;
+  --border: #302b48;
+  --text-primary: #f8f7ff;
+  --text-secondary: #b8b4ce;
+  --accent-violet: #a78bfa;
+  --accent-indigo: #818cf8;
+  --accent-cyan: #67e8f9;
+  --accent-gold: #f5c76b;
+  --mono: "IBM Plex Mono", monospace;
+  --danger: #fca5b6;
+  --radius: 20px;
+  font-family: Inter, Arial, sans-serif;
+  color: var(--text-primary);
+  background: var(--background);
+}

@@ -1,19 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { parseCommand, type ObjectType } from "../../../shared/commands";
 import {
-  addObject,
-  updateObject,
-  removeObject,
-  MAX_OBJECTS,
+  SceneStore,
+  type SceneObject,
+  type SavedScene,
 } from "../../../shared/scene-state.js";
-export type SceneObject = {
-  id: string;
-  type: ObjectType;
-  color: string;
-  position: [number, number, number];
-  rotation: number;
-  scale: number;
-};
+export type { SceneObject };
 export const initialRocket: SceneObject = {
   id: "initial-rocket",
   type: "rocket",
@@ -23,16 +15,57 @@ export const initialRocket: SceneObject = {
   scale: 1,
 };
 export function useScene(studio = false) {
-  const [objects, setObjects] = useState<SceneObject[]>([initialRocket]);
+  const [store] = useState(() => new SceneStore([initialRocket]));
+  const [, render] = useState(0);
+  useEffect(() => store.subscribe(() => render((value) => value + 1)), [store]);
   const [selected, setSelected] = useState<string | null>(initialRocket.id);
   const [mode, setMode] = useState<"add" | "replace">(
     studio ? "add" : "replace",
   );
-  const [message, setMessage] = useState(
-    "A little imagination goes a long way.",
-  );
+  const [message, setMessage] = useState("Choose a form. Make it yours.");
   const [resetKey, setResetKey] = useState(0);
   const [cameraView, setCameraView] = useState({ azimuth: 0, zoom: 0 });
+  function attempt(action: () => void) {
+    try {
+      action();
+    } catch (error) {
+      setMessage((error as Error).message);
+    }
+  }
+  function create(type: ObjectType, color: string) {
+    attempt(() => {
+      const index = mode === "add" ? store.objects.length : 0;
+      const item = store.create(
+        {
+          type,
+          color,
+          position: [
+            index ? (index % 3 === 1 ? -0.4 : index % 3 === 2 ? 0.4 : 0) : 0,
+            0,
+            index ? Math.floor(index / 3) * -0.4 : 0,
+          ],
+          rotation: 20,
+          scale: 1,
+        },
+        mode,
+      );
+      setSelected(item.id);
+      setMessage(
+        `Created ${color} ${type === "flock" ? "flock of birds" : type}. Yours to explore.`,
+      );
+    });
+  }
+  function clear() {
+    if (
+      store.objects.length &&
+      (!studio ||
+        window.confirm("Clear all objects? You can undo this change."))
+    ) {
+      store.clear();
+      setSelected(null);
+      setMessage("Scene cleared. Make room for your next idea.");
+    }
+  }
   function execute(text: string) {
     const command = parseCommand(text);
     if (!command) {
@@ -42,39 +75,14 @@ export function useScene(studio = false) {
       return;
     }
     if (command.action === "clear") {
-      setObjects([]);
-      setSelected(null);
-      setMessage("Scene cleared. Make room for your next idea.");
+      clear();
       return;
     }
-    if (mode === "add" && objects.length >= MAX_OBJECTS) {
-      setMessage(
-        `Your scene has reached its ${MAX_OBJECTS}-object limit. Remove one to keep creating.`,
-      );
-      return;
-    }
-    const index = mode === "add" ? objects.length : 0;
-    const object: SceneObject = {
-      id: crypto.randomUUID(),
-      type: command.objectType,
-      color: command.colorName,
-      position: [
-        index ? (index % 3 === 1 ? -1.8 : index % 3 === 2 ? 1.8 : 0) : 0,
-        0,
-        index ? Math.floor(index / 3) * -1.8 : 0,
-      ],
-      rotation: 20,
-      scale: 1,
-    };
-    setObjects((previous) => addObject(previous, object, mode));
-    setSelected(object.id);
-    setMessage(
-      `Created ${command.colorName} ${command.objectType === "flock" ? "flock of birds" : command.objectType}. Yours to explore.`,
-    );
+    create(command.objectType, command.colorName);
   }
   return {
-    objects,
-    selected,
+    objects: store.objects,
+    selected: store.objects.some((o) => o.id === selected) ? selected : null,
     setSelected,
     mode,
     setMode,
@@ -83,6 +91,34 @@ export function useScene(studio = false) {
     resetKey,
     cameraView,
     execute,
+    create,
+    store,
+    canUndo: !!store.past.length,
+    canRedo: !!store.future.length,
+    undo: () => {
+      store.undo();
+      setMessage("Latest scene change undone.");
+    },
+    redo: () => {
+      store.redo();
+      setMessage("Scene change redone.");
+    },
+    load: (scene: SavedScene) =>
+      attempt(() => {
+        store.commit(scene.objects);
+        setSelected(scene.objects[0]?.id || null);
+        setMessage(
+          "Saved composition opened. Launch AR and open it there to place at a new origin.",
+        );
+      }),
+    duplicate: (id: string) =>
+      attempt(() => {
+        const item = store.duplicate(id);
+        setSelected(item.id);
+        setMessage(
+          "Object duplicated at its existing position. Adjust its position in the inspector.",
+        );
+      }),
     orbit: (direction: number) => {
       setCameraView((view) => ({
         ...view,
@@ -102,15 +138,11 @@ export function useScene(studio = false) {
       setResetKey((key) => key + 1);
       setMessage("Camera reset to the starting view.");
     },
-    clear: () => {
-      setObjects([]);
-      setSelected(null);
-      setMessage("Scene cleared. Make room for your next idea.");
-    },
+    clear,
     update: (id: string, patch: Partial<SceneObject>) =>
-      setObjects((previous) => updateObject(previous, id, patch)),
+      attempt(() => store.update(id, patch)),
     remove: (id: string) => {
-      setObjects((previous) => removeObject(previous, id));
+      store.remove(id);
       setSelected(null);
       setMessage("Object removed.");
     },

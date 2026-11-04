@@ -20,13 +20,13 @@ const tech = [
     icon: ScanLine,
     name: "WebXR",
     tag: "THE SPATIAL LAYER",
-    copy: "On compatible non-mobile browsers, an immersive AR session uses hit tests to find surfaces and position objects relative to the world.",
+    copy: "On compatible devices, WebXR is tried first. An immersive session requires hit tests and DOM overlay and places upright objects on horizontal surfaces.",
   },
   {
     icon: Layers3,
     name: "8th Wall",
-    tag: "THE MOBILE AR ENGINE",
-    copy: "The existing AR app loads the 8th Wall Engine Binary, XRExtras, and Landing Page from jsDelivr on mobile, or when WebXR is unavailable. It uses SLAM tracking with a stabilized ray-to-ground-plane reticle. It requires a network connection and device support.",
+    tag: "THE FALLBACK AR ENGINE",
+    copy: "When WebXR is unavailable, Start AR tries the pinned 8th Wall 1.0.0 binary from jsDelivr. This closed SLAM engine has a separate license. Placement requires normal tracking and an estimated ground-plane intersection; it is not surface detection. Network access and compatible hardware are required.",
   },
   {
     icon: Mic,
@@ -57,12 +57,12 @@ function Flow({ camera = false }: { camera?: boolean }) {
       {(camera
         ? [
             "Explicit start + permissions",
-            "Mobile: 8th Wall / supported desktop: WebXR",
+            "WebXR first / 8th Wall fallback",
             "WebXR hit test / 8th Wall ground-plane reticle",
             "Shared objects + Three.js scene",
           ]
         : [
-            "Type or speak a command",
+            "Choose an object / optional text or voice",
             "Shared vocabulary + command parser",
             "Object selection + color application",
             "React Three Fiber + Three.js scene",
@@ -88,7 +88,7 @@ export default function Technology() {
             <span>dimension of the web.</span>
           </h1>
           <p>
-            Voice, geometry, and spatial tracking. Open web technologies come
+            Touch, geometry, and spatial tracking. Open web technologies come
             together to make imagination tangible.
           </p>
           <a href={REPO} className="text-link">
@@ -106,8 +106,7 @@ export default function Technology() {
           </div>
           <p>
             The playground works without camera access. AR uses a separate
-            runtime with device-specific tracking. Scenes are independent and do
-            not sync.
+            runtime with device-specific tracking. Saved compositions are shared through IndexedDB in the same browser and origin. AR requires placement at a fresh tracked origin; real-world anchors do not persist.
           </p>
         </div>
         <section className="tech-grid">
@@ -120,6 +119,7 @@ export default function Technology() {
             </article>
           ))}
         </section>
+        <p className="sheet-note">8th Wall XR engine by Niantic Spatial. Copyright © 2026 Niantic Spatial, Inc. All rights reserved. <a href="https://github.com/8thwall/engine/blob/main/LICENSE" target="_blank" rel="noreferrer">XR Engine License Agreement and warranty disclaimer ↗</a>. Its MIT framework excludes SLAM. Engine availability does not establish compatibility or licensing for every intended use.</p>
         <section className="honest-tech">
           <span className="eyebrow">
             SMALL VOCABULARY. SPATIAL POSSIBILITIES.

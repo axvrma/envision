@@ -46,19 +46,6 @@ test("clear commands are explicit and do not intercept ordinary phrases", () => 
     assert.deepEqual(parseCommand(value), { action: "clear" });
   assert.equal(parseCommand("clear gold rocket").action, "create");
 });
-test("scene state supports insert, replacement, transforms, removal and bounded complexity", () => {
-  const object = { id: "one", type: "rocket", color: "gold" };
-  let objects = addObject([], object);
-  assert.equal(objects.length, 1);
-  objects = updateObject(objects, "one", { scale: 1.5 });
-  assert.equal(objects[0].scale, 1.5);
-  assert.equal(object.scale, undefined);
-  assert.deepEqual(removeObject(objects, "one"), []);
-  assert.equal(addObject(objects, { id: "two" }, "replace").length, 1);
-  const full = Array.from({ length: MAX_OBJECTS }, (_, id) => ({ id }));
-  assert.equal(addObject(full, object), full);
-  assert.equal(addObject(full, object, "replace")[0], object);
-});
 test("every preserved procedural AR model builds, animates and disposes without DOM or camera", () => {
   for (const type of Object.keys(OBJECT_LIBRARY)) {
     const object = createObject(COLORS.gold, type);

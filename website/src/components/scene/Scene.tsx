@@ -54,7 +54,7 @@ function Model({
   const model = useMemo(() => {
     const object = createObject(COLORS[item.color], item.type) as THREE.Group;
     // Website finish only: retain the source rocket and refine its materials and details.
-    if (item.type === "rocket") {
+    if (item.type === "rocket" && !studio) {
       const finish = item.color === "gold" ? 0xcda55f : COLORS[item.color];
       object.children.forEach((child) => {
         if (child instanceof THREE.Mesh) {
@@ -131,10 +131,10 @@ function Model({
     }
     const box = new THREE.Box3().setFromObject(object);
     const size = box.getSize(new THREE.Vector3());
-    const factor = (studio ? 2.5 : 3.1) / Math.max(size.x, size.y, size.z);
+    const factor = studio ? 5 : 3.1 / Math.max(size.x, size.y, size.z);
     object.scale.setScalar(factor);
     const center = box.getCenter(new THREE.Vector3()).multiplyScalar(factor);
-    object.position.set(-center.x, -box.min.y * factor, -center.z);
+    object.position.set(studio ? 0 : -center.x, studio ? (object.userData.groundOffset || 0) * factor : -box.min.y * factor, studio ? 0 : -center.z);
     object.traverse((child) => {
       if (child.userData.animate) child.userData.baseY = child.position.y;
     });
@@ -150,9 +150,9 @@ function Model({
     const eased = 1 - Math.pow(1 - appear, 3);
     ref.current.scale.setScalar(item.scale * Math.max(0.001, eased));
     ref.current.position.y =
-      item.position[1] +
+      item.position[1] * (studio ? 5 : 1) +
       (studio ? 0.02 : 0.6) +
-      (reduced ? 0 : Math.sin(clock.elapsedTime * 0.9) * 0.055);
+      (reduced || studio ? 0 : Math.sin(clock.elapsedTime * 0.9) * 0.055);
     if (!studio) {
       ref.current.rotation.y = THREE.MathUtils.damp(
         ref.current.rotation.y,
@@ -173,9 +173,9 @@ function Model({
     <group
       ref={ref}
       position={[
-        item.position[0],
-        item.position[1] + (studio ? 0.02 : 0.6),
-        item.position[2],
+        item.position[0] * (studio ? 5 : 1),
+        item.position[1] * (studio ? 5 : 1) + (studio ? 0.02 : 0.6),
+        item.position[2] * (studio ? 5 : 1),
       ]}
       rotation={[0, (item.rotation * Math.PI) / 180, studio ? 0 : -0.22]}
       onClick={(event) => {

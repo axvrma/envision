@@ -1,102 +1,83 @@
-# envision.
+# Envision 2.0 · AR Playground
 
-**Speak it. See it. Experience it.**
+Choose a form. Find a surface. Make room for imagination.
 
-Envision brings supported voice and text commands to a shared library of ten procedural 3D objects. Explore in a browser studio or launch the existing camera AR experience on a compatible device. Commands select predefined models; arbitrary descriptions do not generate geometry.
+Envision is an account-free, mobile-first AR playground with ten procedural objects, direct object editing, optional speech/text input, and local scene saving. The independent Webpack AR runtime and React browser Studio share the object catalog, model factories, validated scene domain, visual tokens, and IndexedDB storage.
 
-This checkout adds a React/TypeScript marketing site and playground around the original VoxAR Webpack runtime. No deployment, repository rename, remote push, or external service change is part of this implementation.
+Source: [github.com/axvrma/envision](https://github.com/axvrma/envision).
 
-## Run locally
+## Run and verify
 
-Use Node **22.15+** (`nvm use`, with Node 22 installed).
+Use **Node 22.15 or newer**; `.nvmrc` selects Node 22. Validation for this release uses Node 22.17.0.
 
 ```sh
+nvm use
 npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173**. The dev command builds the isolated AR bundle before starting Vite. Re-run it after changing the AR source. Camera APIs are allowed on localhost; another device accessing a LAN IP needs HTTPS.
-
-For AR development with a separate HTTPS server:
+The Vite development server serves the website and the built AR assets. Changes inside `src/` require `npm run build:ar`; `npm run dev:ar` provides the separate HTTPS Webpack server. Real camera AR requires a secure origin on the phone; localhost on your laptop is not the phone's localhost.
 
 ```sh
-npm run dev:ar
-```
-
-Open **https://localhost:8084/ar/**. A development certificate may need to be trusted on the testing device. The marketing site remains on Vite; AR is a full document, not an iframe.
-
-## Routes
-
-| Route | Experience |
-| --- | --- |
-| `/` | Marketing site, interactive gold rocket, commands, feature story, walkthrough |
-| `/experience` | Camera-free 3D studio, object library, palette, selection and inspector |
-| `/ar/` | Compatibility/permission screen and original WebXR/8th Wall application |
-| `/technology` | Architecture, engine paths, browser constraints, privacy notes |
-
-## Commands and scene controls
-
-Try `gold rocket`, `blue bird`, `gray elephant`, `teal crystal`, `red cube`, or `clear`. Object-only commands default to teal, matching the original app. Color and object aliases are supported with whole-word matching.
-
-- Objects: cube, sphere, cylinder, cone, elephant, bird, flock (or “birds”), tree, rocket, crystal.
-- Colors: red, blue, green, yellow, orange, purple, white, black, pink, cyan, teal, gold, silver, gray (or “grey”).
-- Hero: commands replace the current object; drag to orbit, scroll/pinch to zoom, reset camera, clear.
-- Studio: choose add or replace mode; add from the library, select in the canvas or object list, change color and position/rotation/scale in the inspector, remove, reset the camera, or clear. The library and inspector collapse on mobile. Scene complexity is bounded at 12 objects.
-- AR: wait for a placement reticle, then type or speak a command. The original reticle, world placement, model animation, clear, install and engine paths are retained. AR scenes are capped at 30 objects.
-
-State lives in the current tab. Playground scenes do not sync to AR or survive a reload.
-
-## Build and Netlify
-
-```sh
+npm run typecheck
 npm run build
+npm test
+npx playwright install chromium
+npm run test:e2e
 npm run preview
 ```
 
-The unified build typechecks, builds Vite into `dist`, builds Webpack into `dist/ar`, and writes explicit route documents and SEO assets. Netlify uses the checked-in `netlify.toml`, Node 22, build command `npm run build`, and publish directory `dist`. No backend is required.
+Build before unit/static-output and browser tests: tests also verify the actual `dist/` assets. No camera, microphone, external account, backend, or AR license key is needed for the automated suite. Mock tracking is explicitly identified in tests; it is not physical-device validation.
 
-Before production, set `SITE_URL=https://your-real-domain` in the build environment. Netlify’s `URL` is the fallback. These generate canonical/Open Graph URLs and `sitemap.xml`. With neither variable, local builds omit canonical URLs and leave the sitemap empty rather than inventing a production domain. `.env.example` documents the value; export it in your shell for local builds.
+| Route | Experience |
+| --- | --- |
+| `/` | Original visual language, live 3D hero, AR Playground product copy |
+| `/experience` | Browser Studio: manual library, orbit/zoom, selection, inspector, voice/text, save/open, undo/redo |
+| `/ar/` | Camera preflight, manual library, tracked preview/confirmation, selection/editing, scene actions, capture alternative |
+| `/technology` | Architecture, capability distinctions, third-party runtime attribution |
 
-Verify the built result, then deploy only with explicit approval. Routes have explicit Netlify rules; missing AR assets do not silently return the marketing app.
+## Play
 
-## Tests
+1. Open `/ar/`. Browse **Add Object** without requesting camera or microphone access.
+2. Tap **Start AR Experience** to request camera AR. WebXR is preferred when the browser reports support; otherwise Start tries the existing 8th Wall distributed engine.
+3. Choose an object and color. Scan a well-lit horizontal floor or table. A translucent model previews the placement.
+4. **Place object** becomes available only with a fresh, valid tracked target. Cancel whenever you want. Missing or lost tracking immediately prevents confirmation.
+5. Tap a placed object to select it. Edit color, scale and rotation, duplicate, remove, or reset selection. Pinch and two-finger twist adjust scale/yaw. **Move** explicitly places the object at a new tracked target; screen dragging is intentionally not used for positioning.
+6. Scene actions include confirmed clearing, undo/redo, reset placement, saved scenes and an accessible object selector.
 
-```sh
-npm test                     # after npm run build: parser, model, state, static output
-npx playwright install chromium
-npm run test:e2e             # production preview, interaction, mobile, accessibility
-```
+Cube, Sphere, Cylinder, Cone, Elephant, Bird, Bird Flock, Tree, Rocket, and Crystal all use the original procedural factories. Library thumbnails are rendered from those factories. Models keep their internal animations; animation does not mutate saved transforms. Reduced-motion preferences disable animation.
 
-CI runs the production build and both suites. Tests cover every supported color/object combination, aliases, invalid commands, geometry factories, scene bounds, insert/select/transform/color/remove/replace/clear, reset feedback, routes, GitHub links, unsupported WebGL, speech success/denial/silence/unsupported states, AR permission and engine-failure flows, mobile overflow, keyboard/reduced-motion interaction and axe WCAG A/AA checks.
+Voice and text select the same predefined catalog: `gold rocket`, `blue bird`, `red cube`, `gray elephant`, `teal crystal`, or `clear`. All AR creation inputs open a preview requiring explicit confirmation. Clear requests confirmation. Speech starts only after tapping **Start listening**; unsupported or denied speech never blocks manual use. Browser speech services may process audio online.
 
-Speech and AR permission behavior in automation is **mocked**. Real microphone transcription, mobile browser installation, SLAM tracking, surface detection, anchoring, and physical-device AR have **not** been verified on hardware. See [validation notes](docs/VALIDATION.md), including the local Lighthouse result (88 performance; 100 accessibility, best practices, and SEO).
+## Save a composition
 
-## Browser and permission constraints
+Use **Save / open scenes** in either experience. Name, save, open, rename, duplicate, delete, export or import a scene. Data persists in IndexedDB on this browser and origin, subject to browser storage eviction, private-mode restrictions and available quota. JSON exports are the portable backup. Nothing is uploaded automatically.
 
-- Camera and microphone are never requested on page load. AR startup and speech each require an explicit user action.
-- AR needs HTTPS outside localhost and a camera-capable browser. Mobile selects the existing 8th Wall integration. Other devices try immersive WebXR with hit testing, then the 8th Wall path.
-- The three existing 8th Wall scripts load from jsDelivr at runtime. Engine/network/licensing/device compatibility remains a deployment dependency. A successful script download does not prove a working camera session.
-- Speech recognition is optional, browser-dependent, and may use an online browser speech service. Text works independently, including in AR after session startup.
-- No analytics or visitor tracking is added. No guarantee is made about third-party engine or browser speech processing.
-- The AR service worker and manifest are scoped to `/ar/`. Only same-origin AR assets are cached; third-party scripts remain network-managed. The app does not promise fully offline AR. A root migration worker retires the old VoxAR registration on upgrades.
-- WebGL-unavailable and context-loss states offer useful feedback and a retry. Render resolution is capped, scenes stop rendering offscreen/in hidden tabs, models dispose on replacement/removal, 3D is split from the main bundle, fonts are self-hosted, and reduced-motion preferences are respected.
+Saved data contains a versioned virtual composition in metres relative to its first object's position. It does **not** contain a physical anchor, camera image, tracking history, or device identity. In AR, opening a scene creates a preview; objects are restored only after a new valid origin is confirmed. Restarting a session similarly requires replacing the previous composition at a fresh origin. History is reset across tracking sessions to avoid restoring stale world coordinates.
 
-## Structure
+Limits: 12 live objects, 40 scene mutations in undo history, 50 saved scenes, 100 KB imports, 80-character names, scale 0.2–3, yaw −180°–180°, coordinates within ±20 metres. Imports validate types, color names, IDs, uniqueness, finite transforms, object count, units, and version. Version 1 of the documented metre-based schema migrates to version 2; old tab-only Studio state was never persisted.
 
-```text
-shared/               Environment-independent models, commands and scene-state operations
-src/                  Preserved camera AR app, preflight UI, scoped PWA
-website/src/          React website, studio, technology page, scene and speech UI
-website/public/brand/ Original SVG identity, static fallback, social artwork
-scripts/              Static route/SEO finalization and reproducible branding screenshots
-tests/                Node unit/output checks and Playwright browser suite
-docs/                 Architecture, audit and validation notes
-```
+## Capture honestly
 
-The website applies a refined metal finish and porthole details to the source rocket. The AR factories keep their original geometry and materials. Surface/device drawings are explicitly labeled illustrations. Live object compositions use the actual shared model library.
+Combined camera + virtual-object capture is **unavailable in this release**. Capture offers **Render objects only**, a new render of application-owned objects from the current camera view against a dark background, labeled “Virtual objects only · Camera excluded.” Reticles, application controls and engine-owned camera textures are excluded. Download PNG, or use native file sharing if the browser supports it. No screenshot is automatically uploaded. A canvas/security failure produces an error rather than a fabricated image.
 
-To regenerate the social image and install icons: run a production preview, then `node scripts/generate-artwork.mjs`, then rebuild. The image uses the actual website WebGL rocket; no stock model or invented AR screenshot is used.
+## Compatibility and privacy
 
-## Source and license
+- WebXR requires immersive AR, hit-test and DOM-overlay support. Placement accepts horizontal surfaces. Session-local coordinates are used; there are no persistent XR anchors.
+- 8th Wall retains its SLAM/Three.js pipeline with explicit absolute-scale configuration. Its fallback intersects a camera ray with an estimated horizontal ground plane. This is **not** native hit-test surface recognition. It requires `NORMAL` tracking and several consecutive valid intersections; there is no arbitrary coordinate fallback.
+- The pinned `@8thwall/*@1.0.0` scripts and engine chunks load from jsDelivr after Start. HTTP delivery was checked, but camera tracking on physical devices has not been verified. The binary is closed and separately licensed; its MIT framework does not provide SLAM. See the [dated engine audit](docs/AR-CAPABILITY-AUDIT.md).
+- Envision adds no analytics, accounts, advertising, backend, or camera-frame uploads. Third-party code and speech services have their own processing behavior; do not describe this as fully offline/local AR.
+- Backgrounding ends the AR session and aborts speech. Explicit exit, engine errors and WebGL context loss stop the active runtime and clean up listeners, models, hit sources and renderer resources. A subsequent camera session requires a new origin.
+- Standard controls, modal focus/Escape handling, an accessible object list and transformation controls support keyboard use. This does not remove the visual/physical limitations of aiming and moving a camera for immersive AR. The browser Studio remains the fallback.
 
-The supplied product source is [axvrma/vox-ar](https://github.com/axvrma/vox-ar). The local checkout’s remote currently names `axvrma/envision`; it was not altered. Public links retain the supplied, verified `vox-ar` URL until a rename is confirmed. Original package metadata and README identify the license as **ISC**. Built by [Abhishek Verma](https://github.com/axvrma).
+## Architecture and release evidence
+
+- [Architecture and file map](docs/ARCHITECTURE.md)
+- [Runtime availability, licensing and capability audit](docs/AR-CAPABILITY-AUDIT.md)
+- [Automated results and measured limits](docs/VALIDATION.md)
+- [Physical-device test checklist](docs/DEVICE-TEST-CHECKLIST.md)
+- [Implementation handoff and Netlify instructions](docs/RELEASE-2.0.md)
+
+Netlify remains a single static `dist/` deployment using the existing `netlify.toml`. Set `SITE_URL` to the final origin if it differs from Netlify's `URL`. The build preserves all four routes, hashed assets, AR-scoped service worker, headers and the legacy root-worker retirement script. This implementation does not push, deploy, or modify remote infrastructure.
+
+Application source retains its existing ISC package license metadata. Inter and IBM Plex Mono notices are in `website/public/licenses/`. The 8th Wall engine license is separate and visibly linked in AR credits and Technology.

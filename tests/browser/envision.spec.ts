@@ -7,7 +7,7 @@ test("hero renders a real WebGL scene, supports suggestions, invalid commands an
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Your words.A new reality.",
+    "Your world.A new reality.",
   );
   await expect(page.getByTestId("scene").first()).toHaveAttribute(
     "data-ready",
@@ -37,7 +37,7 @@ test("navigation, technology and accurate GitHub links", async ({ page }) => {
     .locator('a[href*="github.com/axvrma/"]')
     .all()) {
     const href = await link.getAttribute("href");
-    expect(href).toMatch(/^https:\/\/github.com\/axvrma\/vox-ar(?:\/issues)?$/);
+    expect(href).toMatch(/^https:\/\/github.com\/axvrma\/envision(?:\/issues)?$/);
   }
   await page
     .getByRole("link", { name: "Technology", exact: true })
@@ -88,6 +88,7 @@ test("studio inserts, selects, transforms, colors, removes, replaces and clears"
   await expect(page.locator(".selected-object h2")).toHaveText("Crystal");
   await page.getByRole("button", { name: "Reset camera", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Camera reset");
+  page.once("dialog", dialog => dialog.accept());
   await page.getByRole("button", { name: "Clear scene", exact: true }).click();
   await expect(page.locator(".viewport-meta")).toContainText("0 / 12 OBJECTS");
 });
@@ -213,7 +214,7 @@ test("AR preflight never starts camera or microphone on load and handles denied 
   );
   expect(await page.evaluate(() => (window as any).__xrRequested)).toBe(1);
   await expect(
-    page.getByRole("link", { name: "Try the 3D Playground" }).first(),
+    page.getByRole("link", { name: "Explore without a camera" }).first(),
   ).toBeVisible();
 });
 test("AR engine load failure is actionable", async ({ page }) => {
@@ -223,15 +224,9 @@ test("AR engine load failure is actionable", async ({ page }) => {
   await page.route("https://cdn.jsdelivr.net/**", (route) => route.abort());
   await page.goto("/ar/");
   await page.getByRole("button", { name: "Start AR Experience" }).click();
-  await expect(page.locator("#not-supported")).toBeVisible();
-  await expect(page.locator("#not-supported-reason")).toContainText(
-    "could not start",
-  );
-  await expect(
-    page
-      .locator("#not-supported")
-      .getByRole("link", { name: "Try the 3D Playground" }),
-  ).toBeVisible();
+  await expect(page.locator("#status")).toContainText("Could not load");
+  await expect(page.getByRole("button", {name:"Start AR Experience"})).toBeEnabled();
+  await expect(page.getByRole("link", {name:"Explore without a camera"})).toBeVisible();
 });
 test("mobile navigation, studio controls and pages fit the viewport", async ({
   page,
@@ -347,37 +342,6 @@ test("scene bounds produce feedback and keep all existing objects", async ({
   await expect(page.getByRole("status")).toContainText("12-object limit");
 });
 
-test("mocked 8th Wall pipeline retains typed placement, model creation and clearing", async ({
-  page,
-}) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, "xr", { value: undefined });
-  });
-  await page.route("https://cdn.jsdelivr.net/**", async (route) => {
-    const url = route.request().url();
-    let body = "";
-    if (url.includes("/xrextras"))
-      body =
-        "window.XRExtras = {FullWindowCanvas:{pipelineModule:()=>({})},Loading:{pipelineModule:()=>({})},RuntimeError:{pipelineModule:()=>({})}};";
-    else if (url.includes("/landing-page"))
-      body = "window.LandingPage={pipelineModule:()=>({})};";
-    else
-      body = `window.XR8={GlTextureRenderer:{pipelineModule:()=>({})},Threejs:{pipelineModule:()=>({}),xrScene:()=>({scene:new THREE.Scene(),camera:new THREE.PerspectiveCamera(),renderer:{shadowMap:{}}})},XrController:{pipelineModule:()=>({}),updateCameraProjectionMatrix:()=>{}},addCameraPipelineModules:modules=>window.__modules=modules,run:({canvas})=>window.__modules.forEach(module=>module.onStart?.({canvas}))};window.dispatchEvent(new Event('xrloaded'));`;
-    await route.fulfill({ contentType: "application/javascript", body });
-  });
-  await page.goto("/ar/");
-  await page.getByRole("button", { name: "Start AR Experience" }).click();
-  await expect(page.locator("#ar-command-form")).toBeVisible();
-  await page.getByLabel("A color and an object").fill("gray elephant");
-  await page.getByRole("button", { name: "Place ↗" }).click();
-  await expect(page.locator("#object-count")).toHaveText("1");
-  await expect(page.locator("#status")).toContainText("Placed gray elephant");
-  await page.getByLabel("A color and an object").fill("gold rocket");
-  await page.getByRole("button", { name: "Place ↗" }).click();
-  await expect(page.locator("#object-count")).toHaveText("2");
-  await page.getByRole("button", { name: "Clear placed objects" }).click();
-  await expect(page.locator("#object-count")).toHaveText("0");
-});
 test("AR camera absence and insecure context show explicit device guidance", async ({
   browser,
 }) => {

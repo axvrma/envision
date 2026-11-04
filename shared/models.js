@@ -445,15 +445,11 @@ function darkenColor(color, factor) {
 }
 
 export function disposeObject(object) {
-  object.traverse((child) => {
-    if (!child.isMesh && !child.isLineSegments) return;
-    if (child.geometry) child.geometry.dispose();
-    if (child.material) {
-      if (Array.isArray(child.material)) {
-        child.material.forEach((material) => material.dispose());
-      } else {
-        child.material.dispose();
-      }
-    }
+  const geometries = new Set(), materials = new Set();
+  object.traverse(child => {
+    if (child.geometry) geometries.add(child.geometry);
+    if (child.material) for (const material of Array.isArray(child.material) ? child.material : [child.material]) materials.add(material);
   });
+  geometries.forEach(geometry => geometry.dispose());
+  materials.forEach(material => material.dispose());
 }

@@ -1,0 +1,175 @@
+dialog {
+  color: var(--text-primary);
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 24px;
+  width: min(560px, calc(100% - 24px));
+  max-height: 85dvh;
+  overflow: auto;
+  overscroll-behavior: contain;
+  box-shadow: 0 24px 100px #0008;
+}
+dialog::backdrop {
+  background: #08071199;
+  backdrop-filter: blur(5px);
+}
+dialog button,
+dialog input,
+.file-button {
+  min-height: 44px;
+}
+dialog button {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font: inherit;
+  cursor: pointer;
+}
+dialog input {
+  background: var(--background);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font: inherit;
+  max-width: 100%;
+  width: 100%;
+}
+dialog input:focus-visible,
+dialog button:focus-visible,
+.file-button:focus-within {
+  outline: 2px solid var(--accent-violet);
+  outline-offset: 3px;
+}
+.sheet-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.sheet-heading h2 {
+  font-size: 25px;
+  letter-spacing: -1px;
+  margin: 5px 0 0;
+}
+.sheet-heading > button {
+  font-size: 24px;
+  width: 44px;
+  padding: 0;
+  flex-shrink: 0;
+}
+.sheet-kicker {
+  font: 10px var(--mono);
+  letter-spacing: 1.5px;
+  color: var(--accent-violet);
+}
+.storage-note {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.scene-save-form {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  margin: 20px 0;
+}
+.scene-save-form label {
+  font-size: 12px;
+  flex: 1;
+}
+.scene-save-form input {
+  margin-top: 8px;
+}
+.scene-save-form button {
+  white-space: nowrap;
+}
+dialog .primary {
+  background: var(--accent-violet);
+  color: #100e1f;
+  font-weight: 600;
+}
+.storage-feedback {
+  font-size: 12px;
+  color: var(--accent-cyan);
+  line-height: 1.6;
+  min-height: 20px;
+  margin: 12px 0;
+}
+.saved-list {
+  display: grid;
+  gap: 14px;
+}
+.saved-list > p {
+  color: var(--text-secondary);
+  padding: 24px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.saved-scene {
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 14px;
+  display: grid;
+  gap: 10px;
+}
+.saved-scene strong {
+  overflow-wrap: anywhere;
+}
+.saved-scene small {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.saved-scene > div,
+.scene-file-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.saved-scene button,
+.scene-file-actions button,
+.file-button {
+  font-size: 11px;
+}
+.scene-file-actions {
+  margin-top: 24px;
+}
+.file-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.file-button input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+}
+@media (max-width: 600px) {
+  dialog {
+    margin: auto auto 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    width: 100%;
+    max-height: 88dvh;
+    padding: 22px 20px calc(24px + env(safe-area-inset-bottom));
+  }
+  .scene-save-form {
+    gap: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog {
+    scroll-behavior: auto;
+  }
+}

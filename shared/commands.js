@@ -38,6 +38,7 @@ export const OBJECT_LIBRARY = {
 
 /** Predefined command vocabulary, shared by the website and camera AR. */
 export function parseCommand(input) {
+  if (typeof input !== "string" || input.length > 120) return null;
   const command = input
     .toLowerCase()
     .replace(/[^a-z\s]/g, " ")

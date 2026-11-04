@@ -25,7 +25,7 @@ import CommandBar from "./components/voice/CommandBar";
 import { useScene, type SceneObject } from "./lib/scene";
 const Studio = lazy(() => import("./Studio"));
 const Technology = lazy(() => import("./Technology"));
-export const REPO = "https://github.com/axvrma/vox-ar";
+export const REPO = "https://github.com/axvrma/envision";
 export function Brand() {
   return (
     <a href="/" className="brand" aria-label="Envision home">
@@ -77,7 +77,7 @@ export function Footer() {
     <footer className="site-footer wrap">
       <div>
         <Brand />
-        <p>Speak it. See it. Experience it.</p>
+        <p>Choose it. Place it. Play.</p>
       </div>
       <nav aria-label="Footer navigation">
         <a href="/experience">Experience</a>
@@ -139,7 +139,7 @@ function Home() {
               className="eyebrow"
             >
               <span className="status-dot" /> INTRODUCING ENVISION{" "}
-              <span className="eyebrow-divider" /> VOICE-POWERED AR
+              <span className="eyebrow-divider" /> AR PLAYGROUND
             </motion.div>
             <motion.h1
               id="hero-title"
@@ -147,7 +147,7 @@ function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.12 }}
             >
-              Your words.
+              Your world.
               <br />
               <span>A new reality.</span>
             </motion.h1>
@@ -157,7 +157,7 @@ function Home() {
               transition={{ duration: 0.7, delay: 0.25 }}
             >
               <p className="hero-description">
-                Speak an idea. Watch it appear.
+                Choose a form. Make it yours.
                 <br />
                 Bring it into your space with augmented reality.
               </p>
@@ -274,7 +274,7 @@ function Home() {
               didn’t stay in your head?
             </h2>
             <p>
-              Turn your imagination into something you can see. Speak a command,
+              Turn your imagination into something you can see. Choose an object,
               bring a 3D object to life, and place it in the world around you.
             </p>
           </div>
@@ -302,8 +302,8 @@ function Home() {
               </div>
               <h3>Say it. See it.</h3>
               <p>
-                A color. An object. A moment of magic. Your words bring the
-                model library to life.
+                A color. An object. A moment of magic. Optional voice commands bring the
+                model library to life. Manual controls are always available.
               </p>
               <a className="text-link" href="/experience">
                 Find your first creation <ArrowUpRight size={15} />
@@ -390,7 +390,7 @@ function Home() {
           <h2>
             Three steps from
             <br />
-            words to reality.
+            ideas to reality.
           </h2>
           <div className="walkthrough">
             <div
@@ -404,12 +404,12 @@ function Home() {
                   text: "Launch Envision on a compatible device. No headset, no app store.",
                 },
                 {
-                  title: "Speak",
-                  text: "Tap the microphone and say a supported command. Try “gray elephant”.",
+                  title: "Choose",
+                  text: "Browse ten objects and choose a color. Voice and text are optional shortcuts.",
                 },
                 {
                   title: "Place",
-                  text: "Point your camera toward a well-lit surface. Wait for the reticle, then create your object.",
+                  text: "Scan a well-lit floor or table. Wait for a tracked target, then confirm placement.",
                 },
               ].map((item, index) => (
                 <button
@@ -526,7 +526,7 @@ function Home() {
                 Report an Issue <ArrowUpRight size={14} />
               </a>
             </div>
-            <span className="source-license">axvrma/vox-ar · ISC LICENSE</span>
+            <span className="source-license">axvrma/envision · ISC LICENSE</span>
           </div>
         </section>
         <section className="final-cta">
@@ -557,7 +557,7 @@ function Home() {
             <br />
             to imagine.
           </h2>
-          <p>Your next creation is only a few words away.</p>
+          <p>Your next creation is a tap away.</p>
           <div className="hero-actions">
             <a href="/ar" className="button primary">
               Launch Envision <ArrowUpRight size={17} />
@@ -580,7 +580,7 @@ export default function App() {
         ? "3D Playground"
         : route === "/technology"
           ? "Technology"
-          : "Speak It. See It. Experience It.";
+          : "AR Playground";
     document.title = `Envision — ${title}`;
   }, [route]);
   return (

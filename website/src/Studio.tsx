@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useReducedMotion } from "motion/react";
 import {
   Box,
@@ -21,6 +21,8 @@ import {
 import { COLORS, OBJECT_LIBRARY, type ObjectType } from "../../shared/commands";
 import { useScene } from "./lib/scene";
 import SceneView from "./components/scene/SceneView";
+import SavedScenes from "./components/SavedScenes";
+import { modelThumbnails } from "../../shared/thumbnails.js";
 import CommandBar from "./components/voice/CommandBar";
 const icons = {
   cube: Box,
@@ -39,6 +41,8 @@ export default function Studio() {
   const scene = useScene(true);
   const reduced = !!useReducedMotion();
   const [color, setColor] = useState("gold");
+  const [search, setSearch] = useState("");
+  const thumbnails = useMemo(() => modelThumbnails(color), [color]);
   const [inspector, setInspector] = useState(
     () => window.matchMedia("(min-width: 851px)").matches,
   );
@@ -60,7 +64,10 @@ export default function Studio() {
         </a>
       </div>
       <div className="studio-workspace">
-        <aside className={`object-library ${library ? "expanded" : ""}`}>
+        <aside
+          aria-label="Object library"
+          className={`object-library ${library ? "expanded" : ""}`}
+        >
           <button
             className="panel-heading"
             onClick={() => setLibrary(!library)}
@@ -70,21 +77,44 @@ export default function Studio() {
           </button>
           <div className="library-content">
             <p className="panel-hint">Pick a form. Make it yours.</p>
+            <input
+              className="studio-search"
+              type="search"
+              aria-label="Search object library"
+              placeholder="Find an object…"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
             <div className="object-grid">
-              {(Object.keys(OBJECT_LIBRARY) as ObjectType[]).map((type) => {
-                const Icon = icons[type];
-                return (
-                  <button
-                    key={type}
-                    aria-label={`Add ${OBJECT_LIBRARY[type].label.toLowerCase()}`}
-                    onClick={() => scene.execute(`${color} ${type}`)}
-                  >
-                    <Icon size={25} strokeWidth={1.2} />
-                    <span>{OBJECT_LIBRARY[type].label}</span>
-                    <Plus className="object-plus" size={10} />
-                  </button>
-                );
-              })}
+              {(Object.keys(OBJECT_LIBRARY) as ObjectType[])
+                .filter((type) =>
+                  OBJECT_LIBRARY[type].label
+                    .toLowerCase()
+                    .includes(search.toLowerCase()),
+                )
+                .map((type) => {
+                  const Icon = icons[type];
+                  return (
+                    <button
+                      key={type}
+                      aria-label={`Add ${OBJECT_LIBRARY[type].label.toLowerCase()}`}
+                      onClick={() => scene.create(type, color)}
+                    >
+                      {thumbnails[type] ? (
+                        <img
+                          src={thumbnails[type]}
+                          alt=""
+                          width="100"
+                          height="80"
+                        />
+                      ) : (
+                        <Icon size={25} strokeWidth={1.2} />
+                      )}
+                      <span>{OBJECT_LIBRARY[type].label}</span>
+                      <Plus className="object-plus" size={10} />
+                    </button>
+                  );
+                })}
             </div>
             <div className="panel-heading">COLOR PALETTE</div>
             <div className="color-palette">
@@ -120,6 +150,7 @@ export default function Studio() {
                 <option value="replace">Replace scene</option>
               </select>
             </label>
+            <SavedScenes scene={scene} />
             <div className="studio-control-buttons">
               <button onClick={scene.reset}>
                 <RotateCcw size={15} /> Reset camera
@@ -183,7 +214,7 @@ export default function Studio() {
           </button>
         </div>
         {inspector && (
-          <aside className="inspector">
+          <aside className="inspector" aria-label="Object inspector">
             <div className="panel-heading">
               OBJECT INSPECTOR <Box size={14} />
             </div>
@@ -259,7 +290,7 @@ export default function Studio() {
                     aria-label="Object scale"
                     type="range"
                     min={0.2}
-                    max={2}
+                    max={3}
                     step={0.1}
                     value={selected.scale}
                     onChange={(event) =>
@@ -269,6 +300,18 @@ export default function Studio() {
                     }
                   />
                 </label>
+                <button
+                  className="remove-button"
+                  onClick={() => scene.duplicate(selected.id)}
+                >
+                  Duplicate object
+                </button>
+                <button
+                  className="remove-button"
+                  onClick={() => scene.setSelected(null)}
+                >
+                  Reset selection
+                </button>
                 <button
                   className="remove-button"
                   onClick={() => scene.remove(selected.id)}
@@ -306,8 +349,8 @@ export default function Studio() {
       <div className="studio-command">
         <CommandBar compact onCommand={scene.execute} message={scene.message} />
         <span className="local-note">
-          A browser playground. Scenes stay in this tab and do not transfer to
-          AR.
+          Save a composition in this browser, then open it in AR and place it at
+          a new tracked origin. No physical anchors are saved.
         </span>
       </div>
     </main>

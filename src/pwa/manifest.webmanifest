@@ -1,11 +1,11 @@
 {
-  "name": "Envision AR",
+  "name": "Envision AR Playground",
   "short_name": "Envision",
-  "description": "A voice-controlled WebXR studio for placing polished 3D objects in augmented reality.",
+  "description": "Choose, place, customize and save 3D objects in your world. Voice is optional.",
   "start_url": "/ar/",
   "scope": "/ar/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#080711",
   "theme_color": "#080711",
   "categories": [

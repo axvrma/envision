@@ -11,8 +11,8 @@ const html = await fs.readFile("dist/index.html", "utf8");
 const pages = [
   [
     "",
-    "Envision — Speak It. See It. Experience It.",
-    "Envision is a voice-powered augmented reality experience that brings 3D objects into your world through supported spoken commands.",
+    "Envision — AR Playground",
+    "Envision is an AR playground. Choose, place, customize and save 3D objects in your world. Voice is optional.",
   ],
   [
     "experience",

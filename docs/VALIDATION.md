@@ -1,58 +1,66 @@
-# Validation and deployment handoff
+# Envision 2.0 validation · 2026-11-04
 
-Validation date: 3 November 2026. No deployment, remote push, repository rename, or external service configuration was performed.
+## Environment and commands
 
-## Passed
+Validation uses Node **22.17.0**, npm 10.9.2, macOS arm64 (Apple M1 Pro), and Playwright Chromium. The shell initially defaulted to Node 18, which is below the project's declared engine; the clean install and final validation explicitly used the installed Node 22 binary.
 
-- Node 22.17 production build, TypeScript check, Vite website output, isolated Webpack AR output, and final static route generation.
-- **10 Node tests**: every color/object combination, aliases, invalid/whole-word commands, explicit clearing, scene insertion/replacement/transforms/removal/bounds, all ten model factories/animations/disposal, four-route asset output, scoped PWA, Netlify rules and configurable-origin SEO.
-- **16 Playwright browser tests** in Chromium: real WebGL hero, commands, navigation and source links, studio object operations, speech fallback/denial/silence/success, WebGL absence, AR preflight permission timing, engine load failure, mobile layout, keyboard/reduced motion, axe accessibility on all four routes, camera orbit/zoom/reset rendering, context loss/retry, scene bounds, mocked 8th Wall placement/clearing, and absent-camera/insecure-context guidance.
-- Camera reset was verified against the original rendered viewport in reduced-motion mode, not only its status message.
-- Axe checks report no WCAG A/AA violations for the tested initial states of `/`, `/experience`, `/technology`, and `/ar/`.
-- The 12 shared model/helper/disposal functions were AST-compared with the starting repository's AR entry and are semantically identical. Website material/detail changes are applied only to website instances.
-- `npm audit`: **0 reported vulnerabilities**, including development dependencies at validation time. Three.js r152 is deduplicated across the dependency tree.
-- All three existing 8th Wall script URLs returned HTTP 200. This checks delivery only.
-- Desktop and 390 px mobile screenshots were reviewed; no horizontal document overflow was found on the four routes. The mobile studio starts with collapsed panels to leave its viewport and command bar usable.
+```sh
+npm ci
+npm run typecheck
+npm run build
+npm test
+npm run test:e2e
+npm run measure:performance
+```
 
-## Lighthouse
+Clean `npm ci` installed 500 packages and reported **0 vulnerabilities**. No remote Git operation, deployment, credentials, physical camera, microphone recording or cloud storage was used.
 
-Local production preview, Lighthouse 12.8.2, mobile simulation, headless Chromium, software WebGL. This is a lab measurement, not a guarantee for Netlify or real devices.
+## Automated coverage
 
-| Category / metric | Result |
-| --- | --- |
-| Performance | **88** |
-| Accessibility | **100** |
-| Best practices | **100** |
-| SEO | **100** |
-| First contentful paint | 2.4 s |
-| Largest contentful paint | 3.5 s |
-| Total blocking time | 20 ms |
-| Cumulative layout shift | 0 |
+**25 unit/static-output tests** cover:
 
-The 95+ performance goal remains unmet in this mobile lab run. Precomputed cube-UV studio lighting reduced measured blocking time from approximately 3.4 s to 20 ms, fonts are preloaded/self-hosted, 3D is split from initial UI code, scenes initialize near the viewport and stop rendering offscreen/in hidden tabs. Three.js remains a substantial lazy chunk (~207 KB gzip); the original AR bundle is ~659 KB uncompressed and isolated from marketing navigation. The build reports expected size warnings for these rendering bundles.
+- Shared catalog colors, aliases, longest whole-word command matching, exact clear vocabulary and all ten procedural factories/animations/disposal.
+- Validated creation, object cap, color/transform updates, immutable input, duplicate/remove, duplicate/invalid IDs, unsupported types/colors, finite coordinates, scale/yaw bounds, atomic rejection, bounded undo/redo and redo invalidation.
+- Relative-composition export/import, malformed/oversized input, version/units rejection, documented version 1 → 2 migration and new-origin transforms.
+- IndexedDB save/load/reopen/rename/duplicate/delete, unavailable storage, missing rows, transaction aborts and a raced 52-save test that retains exactly 50 records.
+- Placement/session initialization, duplicate-start prevention, startup failure, permission denial, unsupported features, missing/invalid/stale targets, readiness/loss, manual confirmation, cancellation, selection, transforms, Move, removal, composition staging, teardown and late callbacks.
+- Actual adapter policy with mocked browser/engine objects: WebXR preference, required hit-test + DOM overlay, permission errors, 8th Wall absolute scale, NORMAL-only tracking, consecutive ground intersections, horizon rejection and module/renderer teardown.
+- Production route assets, AR manifest/worker scope, Netlify route/permission config and configurable SEO origin.
 
-## Validation limits
+**25 Playwright Chromium tests** cover:
 
-Speech results and AR session/engine behavior are mocked in the automated permission and integration tests. The browser studio uses real headless WebGL. No real camera imagery, microphone transcription, mobile SLAM session, surface placement, physical world persistence, or device installation was tested. The showcase and walkthrough are labeled illustrations; live objects use the shared procedural library.
+- Real WebGL landing hero, manual Studio library, optional command parsing, selection/inspector transforms, color, replacement/removal/clear, camera orbit/zoom/reset, object bounds and renderer context-loss retry.
+- Navigation, corrected product GitHub links, reduced motion, keyboard entry and axe audits of `/`, `/experience`, `/technology`, `/ar/` plus portrait/landscape library sheets.
+- Speech unsupported/denied/silent/success states in the existing website and AR; manual use and text remain usable. AR voice creation still requires placement confirmation.
+- AR permission timing, denied WebXR, engine network failure, missing camera/insecure context, camera-free library opening/search/color/selection, disabled pretracking placement, modal keyboard focus containment/Escape/restoration.
+- Explicitly mocked 8th Wall session with real Three.js/WebGL: valid preview/confirmation, tracking loss/recovery, raycast selection, inspector, duplicate/delete/undo/redo, confirmed/destructive-clear cancellation, explicit Move, synthetic two-pointer transforms, exit/restart/re-origin workflow, context loss and background cleanup.
+- Real browser IndexedDB persistence across reload and Studio → AR navigation, save/open/rename/duplicate/delete/export, invalid import and unavailable storage.
+- Labeled objects-only image render/preview/download, excluding camera composition claims.
 
-The existing 8th Wall path uses SLAM and a stabilized ray intersection with a horizontal world-space plane. WebXR uses native hit tests. Neither the existing engine's device compatibility nor its licensing/network requirements are bypassed by this website.
+The AR fixture is under `tests/browser/support/ar-mock.ts`. It replaces the CDN scripts with an explicit engine simulation and drives `NORMAL`/`LIMITED` states. Production code has no test tracking switch. These tests do not establish real camera tracking, real touch delivery inside immersive WebXR, hardware compatibility or a successful third-party SLAM startup. Browser gesture events and speech are synthetic where indicated. The Studio and object rendering use actual headless WebGL.
 
-## Before deployment
+## Build and assets
 
-1. Use Node 22.15+ and run `npm ci`, `npm run build`, `npm test`, and `npm run test:e2e` (install Chromium first).
-2. Set `SITE_URL` to the real production origin, or let Netlify provide its `URL`. Build command: `npm run build`; publish directory: `dist`. Canonicals and sitemap intentionally omit an invented domain in unconfigured local builds.
-3. Verify on physical supported Android and iOS devices over HTTPS: startup, camera denial/retry, engine initialization, reticle stability, typed/voice placement, movement around objects, bird/flock animation, clearing, XR session exit, and installation where supported. Also test a browser with unavailable speech recognition.
-4. Confirm the runtime 8th Wall service and license expectations for the intended production use.
-5. Deploy only after explicit user approval. No external registration or hosting service has been changed by this task.
+TypeScript and the combined Vite/Webpack production build pass. `dist/` contains `/`, `/experience`, `/technology`, and `/ar/`, their own entry assets, self-hosted fonts/branding, manifest/icons and scoped worker. Webpack `css-loader` preserves absolute font URLs so the shared `/fonts/` paths resolve at runtime.
 
-## Review artifacts
+The build retains expected renderer bundle-size warnings: the website's Three/R3F chunk is approximately **765 KB raw / 207 KB gzip**, and the independent AR entry approximately **690 KiB raw**. These are warnings, not build errors. AR engine binary/chunk downloads are additional and network-managed. No claim is made that the product meets a specific mobile Lighthouse or frame-rate target; earlier 1.0 Lighthouse scores are not current 2.0 measurements.
 
-- [Homepage, desktop](screenshots/home-desktop.png)
-- [Homepage, mobile](screenshots/home-mobile.png)
-- [Playground, desktop](screenshots/studio-desktop.png)
-- [Playground, mobile](screenshots/studio-mobile.png)
-- [Technology page](screenshots/technology-desktop.png)
-- [AR preflight](screenshots/ar-preflight.png)
-- Original SVG identity, PWA icons and real-render social artwork: `website/public/brand` and `src/pwa/icons`.
+`git diff --check` is included in final review. Screenshots in `docs/screenshots/` are UI screenshots; AR preflight/library screenshots contain no camera session and are not evidence of physical tracking. The social preview is regenerated from the updated real landing page.
 
-To regenerate lighting, run the development server and `node scripts/bake-environment.mjs`. To regenerate the social image/install icons, run the production preview and `node scripts/generate-artwork.mjs`, then rebuild. The cached environment atlas is shared across website scenes for the tab lifetime; per-object geometries and materials are disposed when removed.
+## Measured performance and limits
+
+See [raw performance measurements](performance.json), reproducible with `npm run measure:performance` (`scripts/measure-performance.mjs`). These are **CPU/model-structure measurements on the development host**, not camera/AR frame rates:
+
+- 1,012 domain creation/update operations with a 12-object scene took **19.091ms** in the recorded run; history remained at **40** entries. Export was **2,606 bytes**.
+- Ten create/dispose iterations per catalog item measured mean costs from **0.062ms** (tree) to **4.366ms** (sphere) in that run. They exclude WebGL shader compilation, camera work, tracking, networking and mobile thermal behavior; timing varies by run and warmup.
+- A flock contains **40 mesh draws / 7,640 triangles** before renderer batching/culling effects. Twelve flocks contain **480 meshes / 91,680 triangles**. This is the heaviest catalog scene by mesh count and must be profiled on target phones.
+- AR caps DPR at **1.6** and disables shadow passes. Studio retains its bounded 1024² shadow setup. Model count, history, persisted records, imports and thumbnail cache are bounded. Capture uses a user-triggered temporary renderer at up to 1280×720 image pixels before its label strip; portrait width is reduced to cap height.
+- Tracking frames do not enter history or trigger React. Preview transforms update Three.js directly; preview identity is compared without serializing a saved scene on every frame. Color/type changes dispose and replace model resources. Other mutations reuse groups. Thumbnail/capture renderers are disposed after use.
+
+No real-device FPS, memory ceiling, camera drain or heat measurement is available in this environment. The [physical checklist](DEVICE-TEST-CHECKLIST.md) includes repeated startup/exit, worst-catalog scenes, resource counts and camera indicators.
+
+## Remaining physical/external validation
+
+Android WebXR, supported iOS/Android 8th Wall sessions, camera prompts, absolute-scale acquisition, low-light tracking, real surface stability, immersive-overlay touch gestures, camera/microphone indicators, installed PWA behavior and native file sharing require physical devices. The engine audit verifies documentation/delivery and implements guards; it does not claim the closed binary's processing behavior or every intended use's licensing has been independently validated.
+
+Combined camera capture and persistent real-world anchors are not implemented. Capture offers a labeled virtual-only alternative. Saved compositions need a fresh AR placement origin and remain local to the browser/origin unless manually exported/imported.

@@ -1,0 +1,83 @@
+{
+  "recordedAt": "2026-11-04T10:00:51.568Z",
+  "node": "v22.17.0",
+  "platform": "darwin",
+  "architecture": "arm64",
+  "cpu": "Apple M1 Pro",
+  "kind": "CPU-only synthetic measurements; not physical AR frame rates",
+  "models": [
+    {
+      "type": "cube",
+      "meshes": 1,
+      "triangles": 12,
+      "meanCreateAndDisposeMs": 0.298
+    },
+    {
+      "type": "sphere",
+      "meshes": 1,
+      "triangles": 1656,
+      "meanCreateAndDisposeMs": 4.366
+    },
+    {
+      "type": "cylinder",
+      "meshes": 1,
+      "triangles": 144,
+      "meanCreateAndDisposeMs": 0.33
+    },
+    {
+      "type": "cone",
+      "meshes": 1,
+      "triangles": 108,
+      "meanCreateAndDisposeMs": 0.212
+    },
+    {
+      "type": "elephant",
+      "meshes": 15,
+      "triangles": 5008,
+      "meanCreateAndDisposeMs": 0.566
+    },
+    {
+      "type": "bird",
+      "meshes": 8,
+      "triangles": 1528,
+      "meanCreateAndDisposeMs": 0.254
+    },
+    {
+      "type": "flock",
+      "meshes": 40,
+      "triangles": 7640,
+      "meanCreateAndDisposeMs": 0.991
+    },
+    {
+      "type": "tree",
+      "meshes": 4,
+      "triangles": 264,
+      "meanCreateAndDisposeMs": 0.062
+    },
+    {
+      "type": "rocket",
+      "meshes": 6,
+      "triangles": 658,
+      "meanCreateAndDisposeMs": 0.136
+    },
+    {
+      "type": "crystal",
+      "meshes": 3,
+      "triangles": 24,
+      "meanCreateAndDisposeMs": 0.201
+    }
+  ],
+  "domain": {
+    "mutations": 1012,
+    "elapsedMs": 19.091,
+    "historyEntries": 40,
+    "exportBytes": 2606
+  },
+  "worstCatalogScene": {
+    "objects": 12,
+    "type": "flock",
+    "meshes": 480,
+    "triangles": 91680
+  },
+  "threeRevision": "152"
+}
