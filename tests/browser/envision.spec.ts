@@ -37,7 +37,9 @@ test("navigation, technology and accurate GitHub links", async ({ page }) => {
     .locator('a[href*="github.com/axvrma/"]')
     .all()) {
     const href = await link.getAttribute("href");
-    expect(href).toMatch(/^https:\/\/github.com\/axvrma\/envision(?:\/issues)?$/);
+    expect(href).toMatch(
+      /^https:\/\/github.com\/axvrma\/envision(?:\/issues)?$/,
+    );
   }
   await page
     .getByRole("link", { name: "Technology", exact: true })
@@ -88,7 +90,7 @@ test("studio inserts, selects, transforms, colors, removes, replaces and clears"
   await expect(page.locator(".selected-object h2")).toHaveText("Crystal");
   await page.getByRole("button", { name: "Reset camera", exact: true }).click();
   await expect(page.getByRole("status")).toContainText("Camera reset");
-  page.once("dialog", dialog => dialog.accept());
+  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Clear scene", exact: true }).click();
   await expect(page.locator(".viewport-meta")).toContainText("0 / 12 OBJECTS");
 });
@@ -214,7 +216,9 @@ test("AR preflight never starts camera or microphone on load and handles denied 
   );
   expect(await page.evaluate(() => (window as any).__xrRequested)).toBe(1);
   await expect(
-    page.getByRole("link", { name: "Explore without a camera" }).first(),
+    page
+      .getByRole("alertdialog")
+      .getByRole("link", { name: "Open browser Studio" }),
   ).toBeVisible();
 });
 test("AR engine load failure is actionable", async ({ page }) => {
@@ -225,8 +229,14 @@ test("AR engine load failure is actionable", async ({ page }) => {
   await page.goto("/ar/");
   await page.getByRole("button", { name: "Start AR Experience" }).click();
   await expect(page.locator("#status")).toContainText("Could not load");
-  await expect(page.getByRole("button", {name:"Start AR Experience"})).toBeEnabled();
-  await expect(page.getByRole("link", {name:"Explore without a camera"})).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Retry AR", exact: true }),
+  ).toBeEnabled();
+  await expect(
+    page
+      .getByRole("alertdialog")
+      .getByRole("link", { name: "Open browser Studio" }),
+  ).toBeVisible();
 });
 test("mobile navigation, studio controls and pages fit the viewport", async ({
   page,

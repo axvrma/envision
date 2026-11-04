@@ -32,6 +32,7 @@ Primary sources checked:
 - [Migration FAQ, service timeline, binary limitations](https://8thwall.org/docs/migration/faq)
 - [XR Engine License Agreement](https://github.com/8thwall/engine/blob/main/LICENSE)
 - [XrController tracking output and NORMAL/LIMITED states](https://8thwall.org/docs/api/engine/xrcontroller/pipelinemodule)
+- [SDK hit-test result types, position, rotation and distance](https://8thwall.org/docs/api/engine/xrcontroller/hittest)
 - [Absolute versus responsive scale configuration](https://8thwall.org/docs/api/engine/xrcontroller/configure)
 - [XR8.run device classes and world-tracking restriction](https://8thwall.org/docs/api/engine/xr8/run)
 - [XR8.stop closes camera feed and motion tracking](https://8thwall.org/docs/api/engine/xr8/stop)
@@ -44,7 +45,7 @@ Primary sources checked:
 | --- | --- | --- |
 | Launch | Explicit tap; immersive AR with required hit-test + DOM overlay | Explicit tap; pinned CDN scripts, runtime/device checks, startup timeout |
 | Tracking readiness | Visible XR session, valid viewer pose, current horizontal hit pose | `processCpuResult.reality.trackingStatus === 'NORMAL'` |
-| Target | Current horizontal native hit test (up-axis threshold 0.95) | Ray/estimated `y=0` plane intersection, downward ray, distance <8m, 3 consecutive hits, smoothing |
+| Target | Current horizontal native hit test (up-axis threshold 0.9), filtered over fresh frames | Prefer SDK `DETECTED_SURFACE` then `ESTIMATED_SURFACE` horizontal hits; otherwise labeled `y=0` ray intersection, 0.15–8m, 3 fresh samples, time-based smoothing |
 | Units | XR local metres | Documented `configure({scale:'absolute'})`; startup refuses an engine without configure |
 | Target age | Confirmation requires a pose newer than 250ms | Same; no held pose enables placement |
 | Tracking loss | No target; disabled placement | No target; disabled placement |
@@ -69,3 +70,11 @@ The AR worker caches only the same-origin AR shell; it does not intercept/cache 
 ## Remaining external blockers
 
 No physical Android WebXR or iOS/Android 8th Wall device is connected to this execution environment. Actual camera permission prompts, tracking, world stability, scale estimation, gesture event delivery in immersive DOM overlays, camera indicator cleanup and native sharing remain unverified. See the [device checklist](DEVICE-TEST-CHECKLIST.md). A camera-based release cannot truthfully be described as hardware-validated until those checks are performed.
+
+## Physical 8th Wall regression follow-up
+
+The user reported worse tracking on a physical phone using 8th Wall. The follow-up retains this engine and absolute units, reads each current tracking frame's camera pose, refreshes the projection inverse, and consumes NORMAL/LIMITED status events as well as frame fields. Missing/limited tracking still prevents placement. SDK surface hits, when available and horizontal, take priority over the ground-plane estimate. This is capability-based and does not promise all devices report detected surfaces.
+
+The fixed-per-frame interpolation is replaced by time-based smoothing (20ms for larger movements, 45ms for small movements), a 2mm jitter deadband and stability checks for jumps. Synthetic tests compare 30/60Hz behavior, jitter, target changes and loss; these do not establish improvement on the user's physical phone. The camera pose and already-placed objects are never artificially smoothed.
+
+The manual AR library previously rendered its thumbnails through temporary WebGL contexts during the camera session. It now serves gold form PNGs generated from the same factories. A browser regression checks that opening the library and changing palette colors creates zero additional WebGL contexts. This removes application-side graphics contention without introducing a new SLAM vendor or making unsupported claims about perfect tracking.

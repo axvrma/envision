@@ -29,14 +29,58 @@ test("Netlify config has explicit route handling and secure capabilities", () =>
   assert.ok(config.includes("camera=(self)"));
 });
 
-test('production SEO uses a configurable origin consistently for each route',async()=>{
- const os=await import('node:os');const path=await import('node:path');const {execFileSync}=await import('node:child_process');
- const directory=fs.mkdtempSync(path.join(os.tmpdir(),'envision-seo-'));
- try{
-  fs.mkdirSync(path.join(directory,'dist'));fs.copyFileSync('dist/index.html',path.join(directory,'dist/index.html'));
-  execFileSync(process.execPath,[path.resolve('scripts/finalize-build.mjs')],{cwd:directory,env:{...process.env,SITE_URL:'https://envision.example.test'}});
-  for(const route of ['','experience','technology']){const html=fs.readFileSync(path.join(directory,'dist',route,'index.html'),'utf8');assert.ok(html.includes(`rel="canonical" href="https://envision.example.test/${route}"`));assert.ok(html.includes('content="https://envision.example.test/brand/social.png"'));}
-  const sitemap=fs.readFileSync(path.join(directory,'dist/sitemap.xml'),'utf8');assert.equal((sitemap.match(/<loc>/g)||[]).length,4);
-  assert.ok(fs.readFileSync(path.join(directory,'dist/robots.txt'),'utf8').includes('Sitemap: https://envision.example.test/sitemap.xml'));
- }finally{fs.rmSync(directory,{recursive:true,force:true});}
+test("production SEO uses a configurable origin consistently for each route", async () => {
+  const os = await import("node:os");
+  const path = await import("node:path");
+  const { execFileSync } = await import("node:child_process");
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "envision-seo-"));
+  try {
+    fs.mkdirSync(path.join(directory, "dist"));
+    fs.copyFileSync("dist/index.html", path.join(directory, "dist/index.html"));
+    execFileSync(
+      process.execPath,
+      [path.resolve("scripts/finalize-build.mjs")],
+      {
+        cwd: directory,
+        env: { ...process.env, SITE_URL: "https://envision.example.test" },
+      },
+    );
+    for (const route of ["", "experience", "technology"]) {
+      const html = fs.readFileSync(
+        path.join(directory, "dist", route, "index.html"),
+        "utf8",
+      );
+      assert.ok(
+        html.includes(
+          `rel="canonical" href="https://envision.example.test/${route}"`,
+        ),
+      );
+      assert.ok(
+        html.includes(
+          'content="https://envision.example.test/brand/social.png"',
+        ),
+      );
+    }
+    const sitemap = fs.readFileSync(
+      path.join(directory, "dist/sitemap.xml"),
+      "utf8",
+    );
+    assert.equal((sitemap.match(/<loc>/g) || []).length, 4);
+    assert.ok(
+      fs
+        .readFileSync(path.join(directory, "dist/robots.txt"), "utf8")
+        .includes("Sitemap: https://envision.example.test/sitemap.xml"),
+    );
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+test("every AR form thumbnail is included as a same-origin PNG in the production build", async () => {
+  const { OBJECT_LIBRARY } = await import("../shared/commands.js");
+  for (const type of Object.keys(OBJECT_LIBRARY)) {
+    const data = fs.readFileSync(`dist/models/thumbnails/${type}.png`);
+    assert.equal(data.toString("hex", 0, 8), "89504e470d0a1a0a");
+    assert.equal(data.readUInt32BE(16), 160);
+    assert.equal(data.readUInt32BE(20), 130);
+  }
 });

@@ -6,7 +6,6 @@ import {
   clampScale,
   normalizeRotation,
 } from "../shared/scene-state.js";
-import { modelThumbnails } from "../shared/thumbnails.js";
 import { mountSceneManager, downloadBlob } from "../shared/ui/saved-scenes.js";
 import { PlacementController } from "./ar/placement.js";
 import { detectEngine, WebXRAdapter, EightWallAdapter } from "./ar/adapters.js";
@@ -38,10 +37,10 @@ const run = (fn) => {
   }
 };
 const sheets = [...document.querySelectorAll("dialog")];
+let lastFailure = null,
+  renderedSelection;
 function closeSheets() {
-  sheets.forEach((sheet) => {
-    if (sheet.open) sheet.close();
-  });
+  document.querySelectorAll("dialog[open]").forEach((sheet) => sheet.close());
 }
 function openSheet(id) {
   closeSheets();
@@ -112,7 +111,12 @@ function renderPalette() {
 }
 function renderLibrary() {
   const search = $("library-search").value.toLowerCase().trim(),
-    thumbnails = modelThumbnails(chosenColor);
+    thumbnails = Object.fromEntries(
+      Object.keys(OBJECT_LIBRARY).map((type) => [
+        type,
+        `/models/thumbnails/${type}.png`,
+      ]),
+    );
   const grid = $("object-grid");
   grid.replaceChildren();
   for (const [type, entry] of Object.entries(OBJECT_LIBRARY)) {
@@ -178,6 +182,7 @@ function renderInspector() {
     );
 }
 function renderObjects() {
+  renderedSelection = controller?.selected;
   $("object-count").textContent = String(store.objects.length);
   $("undo-btn").disabled = !store.past.length;
   $("redo-btn").disabled = !store.future.length;
@@ -213,6 +218,17 @@ const trackingNames = {
   failed: "SESSION FAILED",
   unsupported: "AR UNAVAILABLE",
 };
+function presentSessionFailure(c) {
+  if (!c.error || !["failed", "unsupported"].includes(c.state)) return;
+  const failure = `${c.generation}:${c.error}`;
+  if (lastFailure === failure) return;
+  lastFailure = failure;
+  stopSpeech();
+  $("session-error-message").textContent = c.error;
+  $("session-error-title").textContent =
+    c.state === "unsupported" ? "AR could not start" : "AR session failed";
+  openSheet("session-error-sheet");
+}
 function renderController() {
   const c = controller;
   if (!c) return;
@@ -230,6 +246,7 @@ function renderController() {
   $("interaction-surface").classList.toggle("hidden", !c.active);
   $("preflight").classList.toggle("hidden", c.active);
   $("start-ar-btn").disabled = c.starting || c.stopping;
+  $("retry-ar-btn").disabled = c.starting || c.stopping;
   $("start-ar-btn").classList.toggle("hidden", c.active);
   $("start-ar-btn").firstChild.textContent = c.starting
     ? "Starting camera…"
@@ -250,12 +267,26 @@ function renderController() {
           ? "Confirm move"
           : "Place object";
   }
+  $("engine-kind").textContent =
+    engine === "webxr"
+      ? "WEBXR · HORIZONTAL SURFACE HIT TEST"
+      : c.pose?.kind === "detected-surface"
+        ? "8TH WALL · DETECTED SURFACE"
+        : c.pose?.kind === "estimated-surface"
+          ? "8TH WALL · ESTIMATED SURFACE"
+          : c.pose?.kind === "estimated-ground"
+            ? "8TH WALL · ESTIMATED GROUND PLANE"
+            : "8TH WALL · SCANNING";
   $("guidance-text").textContent =
-    c.state === "ready"
-      ? c.pending
-        ? "Target found. Confirm when it looks right."
-        : "Tap Add Object to start creating."
-      : "Move slowly over a well-lit floor or table. Aim down.";
+    c.reason === "initializing"
+      ? "Move your phone gently side to side over a well-lit, textured floor."
+      : c.reason === "limited"
+        ? "Tracking is limited. Improve the light and aim at a textured surface."
+        : c.state === "ready"
+          ? c.pending
+            ? "Target found. Confirm when it looks right."
+            : "Tap Add Object to start creating."
+          : "Move slowly over a well-lit floor or table. Aim down.";
   if (c.state === "failed" || c.state === "unsupported")
     status(
       c.error || "Tracking ended. Restart the session or use browser Studio.",
@@ -268,7 +299,12 @@ function renderController() {
         ? "Target ready. Confirm placement when it looks right."
         : "Tracking ready. Choose an object or tap one to select it.",
     );
-  renderObjects();
+  $("selection-controls").classList.toggle(
+    "hidden",
+    !c.active || !selected() || !!c.pending,
+  );
+  if (renderedSelection !== c.selected) renderObjects();
+  presentSessionFailure(c);
 }
 store.subscribe(renderObjects);
 $("overlay").addEventListener("beforexrselect", (event) => {
@@ -405,7 +441,11 @@ $("ar-command-form").onsubmit = (event) => {
 };
 function stopSpeech() {
   clearTimeout(speechTimer);
-  recognition?.abort();
+  try {
+    recognition?.abort();
+  } catch {
+    /* An ended speech service must not block session failure UI. */
+  }
   recognition = null;
   listening = false;
   $("mic-btn").textContent = "Start listening";
@@ -523,6 +563,10 @@ $("start-ar-btn").onclick = () =>
     if (controller.active)
       status("Camera active. Choose an object and scan a horizontal surface.");
   });
+$("retry-ar-btn").onclick = () => {
+  closeSheets();
+  $("start-ar-btn").click();
+};
 $("exit-btn").onclick = () =>
   run(async () => {
     stopSpeech();
@@ -654,15 +698,8 @@ if ("serviceWorker" in navigator && location.protocol !== "file:")
       .register("/ar/sw.js", { scope: "/ar/" })
       .catch(() => {}),
   );
-// A stopped frame loop must not leave an actionable, stale target on screen.
-setInterval(() => {
-  if (
-    controller?.active &&
-    controller.state === "ready" &&
-    performance.now() - controller.poseAt >= 250
-  )
-    controller.track("temporarily-lost");
-}, 200);
+// Expire stale targets without manufacturing a camera heartbeat; notify if the stream stalls.
+setInterval(() => run(() => controller?.checkTracking()), 200);
 (async () => {
   try {
     engine = await detectEngine();

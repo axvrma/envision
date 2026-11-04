@@ -10,7 +10,7 @@ Record date, device model, OS, browser/version, secure URL, engine selected, net
 | --- | --- | --- |
 | ARCore-capable Android, current Chrome | WebXR, native horizontal hit tests + DOM overlay | Pending |
 | Another mid-range ARCore Android | WebXR; compare tracking/resource costs | Pending |
-| iPhone Safari supported by distributed 8th Wall binary | 8th Wall absolute-scale estimated ground plane | Pending |
+| iPhone Safari supported by distributed 8th Wall binary | 8th Wall absolute-scale surface hit / estimated ground plane | Pending |
 | Compatible Android browser without immersive WebXR | 8th Wall fallback | Pending |
 | Desktop/no camera/unsupported mobile browser | Truthful failure or Studio alternative | Pending |
 | Speech unsupported or denied | Manual library and text remain usable | Pending |
@@ -32,7 +32,7 @@ Do not force an apparent pass by injecting mock tracking into these physical tes
 - [ ] Every object (cube, sphere, cylinder, cone, elephant, bird, flock, tree, rocket, crystal) previews matching geometry; all manual colors work without voice.
 - [ ] Initializing/searching has no actionable target. Place remains disabled until a fresh valid pose exists.
 - [ ] Android native hit tests: scan textured floor/table at several angles; upright objects use horizontal surfaces; walls are rejected.
-- [ ] 8th Wall: verify estimated ground-plane label and absolute scale acquisition. Test floor separately from elevated table; do not claim table detection from a ground-plane ray.
+- [ ] 8th Wall: verify detected/estimated surface labels match SDK capabilities, ground-plane fallback is labeled separately, and absolute scale acquisition works. Test floor separately from elevated table; do not claim table detection from a ground-plane ray.
 - [ ] Confirm places at the visible preview; Cancel creates nothing and preserves existing objects.
 - [ ] Cover camera, dim lights, point at blank/glossy surfaces, aim above horizon, and move quickly: tracking loss removes the ghost/target and prevents placement immediately.
 - [ ] Restore normal tracking: placement becomes available only after a fresh target; objects remain as stable as the engine's session supports.
@@ -68,3 +68,11 @@ Do not force an apparent pass by injecting mock tracking into these physical tes
 - [ ] Test installed PWA and normal browser where supported; worker remains scoped to `/ar/`, and an old cached shell updates correctly without claiming offline engine availability.
 
 Sign-off must identify the tested device/browser/engine combinations and unresolved failures. This checklist is release work still dependent on physical hardware.
+
+## Follow-up on the reported physical 8th Wall phone
+
+- [ ] Compare the updated build on the same phone, browser, scene, light and surfaces as the regression report. Record whether the live target label is DETECTED SURFACE, ESTIMATED SURFACE or ESTIMATED GROUND PLANE.
+- [ ] Open the object library and change several colors while camera tracking runs. Camera responsiveness should be assessed on hardware; no additional thumbnail WebGL context is created by the app.
+- [ ] Test slow aiming, quick aiming, floor/table transitions and tracking loss. The preview must not glide between unrelated surfaces or enable confirmation during LIMITED tracking.
+- [ ] Open Scene actions, disconnect/interrupt the camera, and confirm the failure notification replaces the sheet and offers a working retry. Stop the camera frame stream to verify the eight-second failure path; an ordinary scan without a surface hit must stay active.
+- [ ] At 412×924 and after portrait/landscape changes, check every sheet's close button and content without horizontal clipping, including the saved-scene manager and failure notification.

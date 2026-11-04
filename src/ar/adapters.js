@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { ARSceneRenderer } from "./renderer.js";
+import { TrackedTargetFilter, surfaceHitPose } from "./tracking.js";
 const supportedError = (message) =>
   Object.assign(new Error(message), { name: "NotSupportedError" });
 export async function detectEngine() {
@@ -79,7 +80,12 @@ export class WebXRAdapter extends BaseAdapter {
       return;
     }
     const ended = () => {
-      if (!this.stopping) callbacks.ended();
+      if (!this.stopping)
+        callbacks.ended(
+          new Error(
+            "The AR session ended. Retry AR to scan a new placement origin.",
+          ),
+        );
     };
     session.addEventListener("end", ended);
     this.cleanups.push(() => session.removeEventListener("end", ended));
@@ -126,44 +132,78 @@ export class WebXRAdapter extends BaseAdapter {
     this.cleanups.push(() =>
       session.removeEventListener("visibilitychange", visibility),
     );
-    const reset = () => callbacks.ended();
+    const reset = () =>
+      callbacks.ended(
+        new Error(
+          "The tracking origin changed. Restart AR to place your composition at a new origin.",
+        ),
+      );
     const reference = renderer.xr.getReferenceSpace();
     reference.addEventListener("reset", reset);
     this.cleanups.push(() => reference.removeEventListener("reset", reset));
     const matrix = new THREE.Matrix4();
     const position = new THREE.Vector3();
+    const filter = new TrackedTargetFilter();
     let hadPose = false;
     renderer.setAnimationLoop((time, frame) => {
-      let pose = null;
-      if (
-        frame &&
-        session.visibilityState === "visible" &&
-        frame.getViewerPose(reference)
-      ) {
-        for (const hit of frame.getHitTestResults(this.hitSource)) {
-          const tracked = hit.getPose(reference);
-          if (!tracked) continue;
-          matrix.fromArray(tracked.transform.matrix);
-          // This release places upright objects on horizontal surfaces only.
-          if (matrix.elements[5] < 0.95) continue;
-          position.setFromMatrixPosition(matrix);
-          pose = { position: position.toArray(), rotation: 0 };
-          break;
+      if (this.stopping) return;
+      try {
+        let candidate = null;
+        const viewerPose =
+          frame && session.visibilityState === "visible"
+            ? frame.getViewerPose(reference)
+            : null;
+        if (viewerPose && !viewerPose.emulatedPosition) {
+          for (const hit of frame.getHitTestResults(this.hitSource)) {
+            const tracked = hit.getPose(reference);
+            if (!tracked) continue;
+            matrix.fromArray(tracked.transform.matrix);
+            if (
+              !matrix.elements.every(Number.isFinite) ||
+              matrix.elements[5] < 0.9
+            )
+              continue;
+            position.setFromMatrixPosition(matrix);
+            candidate = {
+              position: position.toArray(),
+              rotation: 0,
+              kind: "detected-surface",
+            };
+            break;
+          }
         }
+        const pose = filter.update(candidate, time);
+        callbacks.tracking(
+          pose ? "ready" : hadPose ? "temporarily-lost" : "searching",
+          pose,
+          !viewerPose || viewerPose.emulatedPosition
+            ? "limited"
+            : candidate
+              ? "settling"
+              : "no-surface",
+        );
+        if (pose) hadPose = true;
+        this.view?.animate(time);
+        if (!this.stopping && this.view) renderer.render(scene, camera);
+      } catch (error) {
+        renderer.setAnimationLoop(null);
+        callbacks.ended(
+          new Error(
+            `WebXR tracking failed: ${error?.message || "the device stopped providing a usable pose"}`,
+          ),
+        );
       }
-      callbacks.tracking(
-        pose ? "ready" : hadPose ? "temporarily-lost" : "searching",
-        pose,
-      );
-      if (pose) hadPose = true;
-      this.view?.animate(time);
-      renderer.render(scene, camera);
     });
   }
+
   async stop() {
     this.stopping = true;
     this.renderer?.setAnimationLoop(null);
-    this.hitSource?.cancel();
+    try {
+      this.hitSource?.cancel();
+    } catch {
+      /* Session may already have ended. */
+    }
     this.hitSource = null;
     const session = this.session;
     this.session = null;
@@ -253,11 +293,14 @@ export class EightWallAdapter extends BaseAdapter {
     this.container.appendChild(canvas);
     const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0),
       ray = new THREE.Raycaster(),
-      point = new THREE.Vector3(),
-      stable = new THREE.Vector3();
-    let streak = 0,
-      hadPose = false;
+      point = new THREE.Vector3();
+    const filter = new TrackedTargetFilter();
+    let hadPose = false,
+      trackingStatus = null,
+      trackingReason = null,
+      surfaceAPI = typeof XR8.XrController.hitTest === "function";
     await new Promise((resolve, reject) => {
+      let started = false;
       const timer = setTimeout(
         () =>
           reject(
@@ -273,7 +316,7 @@ export class EightWallAdapter extends BaseAdapter {
       });
       const fail = (error) => {
         clearTimeout(timer);
-        if (!this.view)
+        if (!started)
           reject(
             error instanceof Error
               ? error
@@ -300,33 +343,113 @@ export class EightWallAdapter extends BaseAdapter {
             facing: camera.quaternion,
           });
           clearTimeout(timer);
+          started = true;
           resolve();
         },
+        listeners: [
+          {
+            event: "reality.trackingstatus",
+            process: ({ detail }) => {
+              trackingStatus = detail?.status || null;
+              trackingReason = detail?.reason || null;
+              if (trackingStatus !== "NORMAL") {
+                filter.reset();
+                callbacks.tracking(
+                  hadPose ? "temporarily-lost" : "searching",
+                  null,
+                  detail?.reason === "INITIALIZING"
+                    ? "initializing"
+                    : "limited",
+                );
+              }
+            },
+          },
+        ],
         onUpdate: ({ processCpuResult }) => {
           if (!this.view || this.stopping) return;
-          const reality = processCpuResult?.reality;
-          let pose = null;
-          if (reality?.trackingStatus === "NORMAL") {
-            this.camera.updateMatrixWorld();
-            ray.setFromCamera({ x: 0, y: 0 }, this.camera);
-            if (
-              ray.ray.direction.y < -0.05 &&
-              ray.ray.intersectPlane(plane, point) &&
-              ray.ray.origin.distanceTo(point) < 8
-            ) {
-              if (!streak) stable.copy(point);
-              else stable.lerp(point, 0.18);
-              streak++;
-              if (streak >= 3)
-                pose = { position: stable.toArray(), rotation: 0 };
-            } else streak = 0;
-          } else streak = 0;
-          callbacks.tracking(
-            pose ? "ready" : hadPose ? "temporarily-lost" : "searching",
-            pose,
-          );
-          if (pose) hadPose = true;
-          this.view.animate(performance.now());
+          try {
+            const reality = processCpuResult?.reality;
+            if (reality?.trackingStatus)
+              trackingStatus = reality.trackingStatus;
+            if (reality?.trackingReason)
+              trackingReason = reality.trackingReason;
+            let candidate = null;
+            // Use this frame's pose; a cached renderer camera can lag the tracking pipeline.
+            const p = reality?.position,
+              q = reality?.rotation;
+            const freshPose =
+              p &&
+              q &&
+              [p.x, p.y, p.z, q.x, q.y, q.z, q.w].every(Number.isFinite) &&
+              Math.abs(Math.hypot(q.x, q.y, q.z, q.w) - 1) < 0.1;
+            if (trackingStatus === "NORMAL" && freshPose) {
+              this.camera.position.set(p.x, p.y, p.z);
+              this.camera.quaternion.set(q.x, q.y, q.z, q.w).normalize();
+              this.camera.updateMatrixWorld();
+              this.camera.projectionMatrixInverse
+                .copy(this.camera.projectionMatrix)
+                .invert();
+              if (surfaceAPI) {
+                try {
+                  candidate = surfaceHitPose(
+                    XR8.XrController.hitTest(0.5, 0.5),
+                  );
+                } catch {
+                  surfaceAPI = false;
+                }
+              }
+              if (!candidate) {
+                ray.setFromCamera({ x: 0, y: 0 }, this.camera);
+                if (
+                  ray.ray.direction.y < -0.05 &&
+                  ray.ray.intersectPlane(plane, point) &&
+                  ray.ray.origin.distanceTo(point) >= 0.15 &&
+                  ray.ray.origin.distanceTo(point) < 8
+                )
+                  candidate = {
+                    position: point.toArray(),
+                    rotation: 0,
+                    kind: "estimated-ground",
+                  };
+              }
+            }
+            const pose = filter.update(candidate, performance.now());
+            callbacks.tracking(
+              pose ? "ready" : hadPose ? "temporarily-lost" : "searching",
+              pose,
+              trackingStatus !== "NORMAL"
+                ? trackingReason === "INITIALIZING"
+                  ? "initializing"
+                  : "limited"
+                : candidate
+                  ? "settling"
+                  : "no-surface",
+            );
+            if (pose) hadPose = true;
+            this.view?.animate(performance.now());
+          } catch (error) {
+            fail(
+              new Error(
+                `AR tracking failed: ${error?.message || "invalid camera data"}`,
+              ),
+            );
+          }
+        },
+        onPaused: () => {
+          if (!this.stopping)
+            fail(
+              new Error(
+                "The AR camera was paused. Restart AR to continue tracking.",
+              ),
+            );
+        },
+        onDetach: () => {
+          if (!this.stopping)
+            fail(
+              new Error(
+                "The AR engine stopped unexpectedly. Retry AR to start a new camera session.",
+              ),
+            );
         },
         onException: fail,
         onCameraStatusChange: ({ status }) => {
@@ -357,10 +480,16 @@ export class EightWallAdapter extends BaseAdapter {
   }
   async stop() {
     this.stopping = true;
-    await Promise.resolve(window.XR8?.stop?.());
-    window.XR8?.clearCameraPipelineModules?.();
-    await super.stop();
-    this.renderer?.dispose();
-    this.renderer = null;
+    try {
+      await Promise.resolve(window.XR8?.stop?.());
+    } finally {
+      try {
+        window.XR8?.clearCameraPipelineModules?.();
+      } finally {
+        await super.stop();
+        this.renderer?.dispose();
+        this.renderer = null;
+      }
+    }
   }
 }

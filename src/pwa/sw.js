@@ -1,4 +1,4 @@
-const CACHE_NAME = "envision-ar-v3";
+const CACHE_NAME = "envision-ar-v4";
 const APP_SHELL = [
   "/ar/",
   "/ar/manifest.webmanifest",

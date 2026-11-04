@@ -135,3 +135,41 @@ test("ending during initialization prevents overlapping starts and cleans late r
   assert.equal(controller.starting, false);
   assert.ok(adapter.stopped);
 });
+test("watchdog expires placement immediately, then reports a real camera-frame stall", async () => {
+  const { controller, adapter, tick } = setup();
+  await controller.start();
+  controller.begin({ type: "cube" });
+  adapter.callbacks.tracking("ready", pose);
+  tick(251);
+  controller.checkTracking();
+  assert.equal(controller.canPlace, false);
+  assert.equal(controller.pose, null);
+  assert.equal(controller.lastFrameAt, 0);
+  tick(8001);
+  await controller.checkTracking();
+  assert.equal(controller.active, false);
+  assert.equal(controller.state, "failed");
+  assert.match(controller.error, /stopped sending frames/);
+});
+test("frame heartbeats without placement hits keep a live scanning session alive", async () => {
+  const { controller, adapter, tick } = setup();
+  await controller.start();
+  for (let time = 1000; time < 20000; time += 1000) {
+    tick(time);
+    adapter.callbacks.tracking("searching", null);
+    await controller.checkTracking();
+  }
+  assert.equal(controller.active, true);
+  await controller.end();
+});
+test("cleanup errors do not erase the original session failure or leave teardown unfinished", async () => {
+  const { controller, adapter } = setup();
+  await controller.start();
+  adapter.stop = async () => {
+    throw new Error("cleanup failure");
+  };
+  await controller.end(new Error("Camera disconnected"));
+  assert.equal(controller.error, "Camera disconnected");
+  assert.equal(controller.stopping, false);
+  assert.equal(controller.active, false);
+});

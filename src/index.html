@@ -196,8 +196,9 @@
         </div>
         <div id="library-colors" class="ar-palette"></div>
         <p class="sheet-note">
-          Pick an object, then confirm it at a tracked target. No microphone
-          needed.
+          Pick an object, then confirm it at a tracked target. Form thumbnails
+          are shown in gold; your chosen color appears in the placement preview.
+          No microphone needed.
         </p>
       </dialog>
       <dialog id="inspector-sheet" aria-labelledby="inspector-title">
@@ -298,10 +299,11 @@
           <summary>Engine, privacy &amp; credits</summary>
           <p class="privacy-note">
             WebXR uses device hit tests on horizontal surfaces. The 8th Wall
-            fallback uses tracked rays against an estimated horizontal ground
-            plane, not surface detection. No persistent physical anchors. 8th
-            Wall scripts and engine chunks load from jsDelivr after Start AR;
-            network access is required. Envision adds no analytics or camera
+            fallback prefers reported horizontal surface hits. Otherwise it uses
+            tracked rays against an estimated horizontal ground plane, labeled
+            separately from surface detection. No persistent physical anchors.
+            8th Wall scripts and engine chunks load from jsDelivr after Start
+            AR; network access is required. Envision adds no analytics or camera
             uploads. Third-party engine and speech behavior is outside
             Envision’s control.
           </p>
@@ -351,6 +353,31 @@
         <div id="capture-results" class="action-grid hidden">
           <button id="download-capture-btn">Download PNG</button
           ><button id="share-capture-btn">Share image</button>
+        </div>
+      </dialog>
+      <dialog
+        id="session-error-sheet"
+        role="alertdialog"
+        aria-labelledby="session-error-title"
+        aria-describedby="session-error-message session-error-hint"
+      >
+        <div class="sheet-heading">
+          <div>
+            <span class="sheet-kicker">LET’S GET YOU BACK TO PLAYING</span>
+            <h2 id="session-error-title">AR session failed</h2>
+          </div>
+          <button data-close aria-label="Dismiss session notification">
+            ×
+          </button>
+        </div>
+        <p id="session-error-message" class="session-error-message"></p>
+        <p id="session-error-hint" class="session-error-hint">
+          Your composition is still available. Check camera permissions and your
+          connection, then try again. Restarting needs a new placement origin.
+        </p>
+        <div class="action-grid">
+          <button id="retry-ar-btn" class="primary">Retry AR</button
+          ><a href="/experience">Open browser Studio ↗</a>
         </div>
       </dialog>
     </main>

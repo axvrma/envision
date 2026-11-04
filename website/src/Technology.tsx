@@ -26,7 +26,7 @@ const tech = [
     icon: Layers3,
     name: "8th Wall",
     tag: "THE FALLBACK AR ENGINE",
-    copy: "When WebXR is unavailable, Start AR tries the pinned 8th Wall 1.0.0 binary from jsDelivr. This closed SLAM engine has a separate license. Placement requires normal tracking and an estimated ground-plane intersection; it is not surface detection. Network access and compatible hardware are required.",
+    copy: "When WebXR is unavailable, Start AR tries the pinned 8th Wall 1.0.0 binary from jsDelivr. This closed SLAM engine has a separate license. Placement requires normal tracking and prefers reported horizontal surface hits. When unavailable, a clearly labeled estimated ground plane is used. Network access and compatible hardware are required.",
   },
   {
     icon: Mic,
@@ -58,7 +58,7 @@ function Flow({ camera = false }: { camera?: boolean }) {
         ? [
             "Explicit start + permissions",
             "WebXR first / 8th Wall fallback",
-            "WebXR hit test / 8th Wall ground-plane reticle",
+            "Native hit tests / labeled ground-plane fallback",
             "Shared objects + Three.js scene",
           ]
         : [
@@ -106,7 +106,10 @@ export default function Technology() {
           </div>
           <p>
             The playground works without camera access. AR uses a separate
-            runtime with device-specific tracking. Saved compositions are shared through IndexedDB in the same browser and origin. AR requires placement at a fresh tracked origin; real-world anchors do not persist.
+            runtime with device-specific tracking. Saved compositions are shared
+            through IndexedDB in the same browser and origin. AR requires
+            placement at a fresh tracked origin; real-world anchors do not
+            persist.
           </p>
         </div>
         <section className="tech-grid">
@@ -119,7 +122,19 @@ export default function Technology() {
             </article>
           ))}
         </section>
-        <p className="sheet-note">8th Wall XR engine by Niantic Spatial. Copyright © 2026 Niantic Spatial, Inc. All rights reserved. <a href="https://github.com/8thwall/engine/blob/main/LICENSE" target="_blank" rel="noreferrer">XR Engine License Agreement and warranty disclaimer ↗</a>. Its MIT framework excludes SLAM. Engine availability does not establish compatibility or licensing for every intended use.</p>
+        <p className="sheet-note">
+          8th Wall XR engine by Niantic Spatial. Copyright © 2026 Niantic
+          Spatial, Inc. All rights reserved.{" "}
+          <a
+            href="https://github.com/8thwall/engine/blob/main/LICENSE"
+            target="_blank"
+            rel="noreferrer"
+          >
+            XR Engine License Agreement and warranty disclaimer ↗
+          </a>
+          . Its MIT framework excludes SLAM. Engine availability does not
+          establish compatibility or licensing for every intended use.
+        </p>
         <section className="honest-tech">
           <span className="eyebrow">
             SMALL VOCABULARY. SPATIAL POSSIBILITIES.

@@ -17,7 +17,7 @@ Clean `npm ci` installed 500 packages and reported **0 vulnerabilities**. No rem
 
 ## Automated coverage
 
-**25 unit/static-output tests** cover:
+**33 unit/static-output tests** cover:
 
 - Shared catalog colors, aliases, longest whole-word command matching, exact clear vocabulary and all ten procedural factories/animations/disposal.
 - Validated creation, object cap, color/transform updates, immutable input, duplicate/remove, duplicate/invalid IDs, unsupported types/colors, finite coordinates, scale/yaw bounds, atomic rejection, bounded undo/redo and redo invalidation.
@@ -27,7 +27,7 @@ Clean `npm ci` installed 500 packages and reported **0 vulnerabilities**. No rem
 - Actual adapter policy with mocked browser/engine objects: WebXR preference, required hit-test + DOM overlay, permission errors, 8th Wall absolute scale, NORMAL-only tracking, consecutive ground intersections, horizon rejection and module/renderer teardown.
 - Production route assets, AR manifest/worker scope, Netlify route/permission config and configurable SEO origin.
 
-**25 Playwright Chromium tests** cover:
+**31 Playwright Chromium tests** cover:
 
 - Real WebGL landing hero, manual Studio library, optional command parsing, selection/inspector transforms, color, replacement/removal/clear, camera orbit/zoom/reset, object bounds and renderer context-loss retry.
 - Navigation, corrected product GitHub links, reduced motion, keyboard entry and axe audits of `/`, `/experience`, `/technology`, `/ar/` plus portrait/landscape library sheets.
@@ -43,7 +43,7 @@ The AR fixture is under `tests/browser/support/ar-mock.ts`. It replaces the CDN 
 
 TypeScript and the combined Vite/Webpack production build pass. `dist/` contains `/`, `/experience`, `/technology`, and `/ar/`, their own entry assets, self-hosted fonts/branding, manifest/icons and scoped worker. Webpack `css-loader` preserves absolute font URLs so the shared `/fonts/` paths resolve at runtime.
 
-The build retains expected renderer bundle-size warnings: the website's Three/R3F chunk is approximately **765 KB raw / 207 KB gzip**, and the independent AR entry approximately **690 KiB raw**. These are warnings, not build errors. AR engine binary/chunk downloads are additional and network-managed. No claim is made that the product meets a specific mobile Lighthouse or frame-rate target; earlier 1.0 Lighthouse scores are not current 2.0 measurements.
+The build retains expected renderer bundle-size warnings: the website's Three/R3F chunk is approximately **765 KB raw / 207 KB gzip**, and the independent AR entry approximately **approximately 700 KiB raw**. These are warnings, not build errors. AR engine binary/chunk downloads are additional and network-managed. No claim is made that the product meets a specific mobile Lighthouse or frame-rate target; earlier 1.0 Lighthouse scores are not current 2.0 measurements.
 
 `git diff --check` is included in final review. Screenshots in `docs/screenshots/` are UI screenshots; AR preflight/library screenshots contain no camera session and are not evidence of physical tracking. The social preview is regenerated from the updated real landing page.
 
@@ -55,7 +55,7 @@ See [raw performance measurements](performance.json), reproducible with `npm run
 - Ten create/dispose iterations per catalog item measured mean costs from **0.062ms** (tree) to **4.366ms** (sphere) in that run. They exclude WebGL shader compilation, camera work, tracking, networking and mobile thermal behavior; timing varies by run and warmup.
 - A flock contains **40 mesh draws / 7,640 triangles** before renderer batching/culling effects. Twelve flocks contain **480 meshes / 91,680 triangles**. This is the heaviest catalog scene by mesh count and must be profiled on target phones.
 - AR caps DPR at **1.6** and disables shadow passes. Studio retains its bounded 1024² shadow setup. Model count, history, persisted records, imports and thumbnail cache are bounded. Capture uses a user-triggered temporary renderer at up to 1280×720 image pixels before its label strip; portrait width is reduced to cap height.
-- Tracking frames do not enter history or trigger React. Preview transforms update Three.js directly; preview identity is compared without serializing a saved scene on every frame. Color/type changes dispose and replace model resources. Other mutations reuse groups. Thumbnail/capture renderers are disposed after use.
+- Tracking frames do not enter history or trigger React. Preview transforms update Three.js directly; preview identity is compared without serializing a saved scene on every frame. Color/type changes dispose and replace model resources. Other mutations reuse groups. AR now uses static thumbnails; runtime Studio thumbnail/capture renderers are disposed after use.
 
 No real-device FPS, memory ceiling, camera drain or heat measurement is available in this environment. The [physical checklist](DEVICE-TEST-CHECKLIST.md) includes repeated startup/exit, worst-catalog scenes, resource counts and camera indicators.
 
@@ -64,3 +64,13 @@ No real-device FPS, memory ceiling, camera drain or heat measurement is availabl
 Android WebXR, supported iOS/Android 8th Wall sessions, camera prompts, absolute-scale acquisition, low-light tracking, real surface stability, immersive-overlay touch gestures, camera/microphone indicators, installed PWA behavior and native file sharing require physical devices. The engine audit verifies documentation/delivery and implements guards; it does not claim the closed binary's processing behavior or every intended use's licensing has been independently validated.
 
 Combined camera capture and persistent real-world anchors are not implemented. Capture offers a labeled virtual-only alternative. Saved compositions need a fresh AR placement origin and remain local to the browser/origin unless manually exported/imported.
+
+## Mobile layout, failure notifications and physical 8th Wall follow-up
+
+Additional regressions cover every AR sheet at Pixel 9's 412×924 CSS pixels, 320×568 and landscape, using mobile/touch emulation and DPR 2.625. Assertions check modal and child-control bounds, internal horizontal scroll width, dismiss visibility and resizing an already-open sheet. Native mobile camera tracking is not simulated by a DevTools device preset.
+
+Runtime/startup errors now replace an open sheet with an accessible alert dialog, preserve the cause, and offer explicit Retry AR / Studio actions. Tests exercise exceptions while settings is open, camera-start failure, context loss, actual missing-frame watchdog timeout, and retry. Cleanup failure cannot erase the original error or leave the controller stuck stopping.
+
+Target-filter tests cover fresh-sample readiness, invalid input, jitter suppression, frame-rate-independent response at 30/60Hz, large jumps, changed surfaces and immediate loss invalidation. Actual adapter tests cover native surface preference and event-only tracking-status delivery. Browser tests confirm target-source labels, disabled placement on LIMITED status and no additional WebGL contexts when opening/recoloring the AR library. Static output tests verify all ten 160×130 PNG model thumbnails are shipped.
+
+These are application-level improvements. The user's reported physical 8th Wall regression still requires testing the updated build on that phone; neither perfect SLAM tracking nor a device FPS improvement is claimed from mocks.

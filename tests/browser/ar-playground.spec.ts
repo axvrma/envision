@@ -373,7 +373,10 @@ test("AR context loss stops the session and provides a restart; browser backgrou
   await expect(
     page.getByRole("button", { name: "Start AR Experience" }),
   ).toBeEnabled();
-  await page.getByRole("button", { name: "Start AR Experience" }).click();
+  await expect(page.getByRole("alertdialog")).toContainText(
+    "WebGL context lost",
+  );
+  await page.getByRole("button", { name: "Retry AR", exact: true }).click();
   await expect(page.locator("#exit-btn")).toBeVisible();
   await page.evaluate(() => {
     Object.defineProperty(document, "hidden", {

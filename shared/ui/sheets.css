@@ -1,12 +1,19 @@
 dialog {
+  position: fixed;
+  inset-inline: 0;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: min(100%, 100dvw);
+  overflow-wrap: anywhere;
   color: var(--text-primary);
   background: var(--background-secondary);
   border: 1px solid var(--border);
   border-radius: 24px;
   padding: 24px;
-  width: min(560px, calc(100% - 24px));
+  width: min(560px, calc(100dvw - 24px));
   max-height: 85dvh;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
   box-shadow: 0 24px 100px #0008;
 }
@@ -51,6 +58,10 @@ dialog button:focus-visible,
   gap: 16px;
   margin-bottom: 18px;
 }
+.sheet-heading > div {
+  min-width: 0;
+  flex: 1;
+}
 .sheet-heading h2 {
   font-size: 25px;
   letter-spacing: -1px;
@@ -79,6 +90,7 @@ dialog button:focus-visible,
   margin: 20px 0;
 }
 .scene-save-form label {
+  min-width: 0;
   font-size: 12px;
   flex: 1;
 }
@@ -160,7 +172,7 @@ dialog .primary {
     margin: auto auto 0;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-    width: 100%;
+    width: 100dvw;
     max-height: 88dvh;
     padding: 22px 20px calc(24px + env(safe-area-inset-bottom));
   }
@@ -172,4 +184,21 @@ dialog .primary {
   dialog {
     scroll-behavior: auto;
   }
+}
+
+/* Constrain contents as well as the modal: intrinsic grid widths must not clip dismiss controls. */
+dialog :where(button, input, select, textarea, fieldset, article, details) {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+.saved-scene {
+  min-width: 0;
+}
+.saved-scene > div {
+  min-width: 0;
+}
+.scene-file-actions > * {
+  min-width: 0;
+  max-width: 100%;
 }

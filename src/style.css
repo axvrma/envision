@@ -416,7 +416,7 @@ dialog select {
 }
 .ar-object-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 .ar-object-grid button {
@@ -511,7 +511,7 @@ dialog select {
 }
 .action-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin: 20px 0;
 }
@@ -578,7 +578,7 @@ body:not(.is-active) #selection-controls {
     bottom: 190px;
   }
   .ar-object-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   #library-sheet {
     width: 620px;
@@ -664,7 +664,7 @@ body:not(.is-active) #selection-controls {
   }
 }
 dialog {
-  max-width: 100%;
+  max-width: min(100%, 100dvw);
 }
 .sheet-heading {
   position: sticky;
@@ -677,7 +677,9 @@ dialog {
 @media (max-width: 600px) {
   dialog {
     margin: auto 0 0;
-    max-width: 100%;
+    width: 100dvw;
+    max-width: 100dvw;
+    inset-inline: 0;
   }
 }
 @media (orientation: landscape) and (max-height: 600px) {
@@ -724,4 +726,45 @@ dialog {
   position: absolute;
   inset: 0;
   touch-action: none;
+}
+
+.action-grid,
+.ar-object-grid {
+  min-width: 0;
+  width: 100%;
+}
+.action-grid button {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.session-error-message {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 20px 0;
+}
+.session-error-hint {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+#session-error-sheet {
+  border-color: #fca5b655;
+}
+#session-error-sheet .sheet-kicker {
+  color: var(--danger);
+}
+#session-error-sheet .action-grid {
+  margin-bottom: 0;
+}
+#session-error-sheet .action-grid a {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 12px;
+  text-align: center;
 }

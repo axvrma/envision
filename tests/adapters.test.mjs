@@ -72,7 +72,8 @@ test("real 8th Wall adapter accepts only NORMAL tracking + finite ground interse
   let modules = [],
     stops = 0,
     disposed = 0,
-    config;
+    config,
+    hits = [];
   const renderer = {
     domElement: canvas,
     shadowMap: {},
@@ -92,6 +93,7 @@ test("real 8th Wall adapter accepts only NORMAL tracking + finite ground interse
     },
     GlTextureRenderer: { pipelineModule: () => ({}) },
     XrController: {
+      hitTest: () => hits,
       pipelineModule: () => ({}),
       configure: (value) => (config = value),
       updateCameraProjectionMatrix: () => {},
@@ -124,12 +126,50 @@ test("real 8th Wall adapter accepts only NORMAL tracking + finite ground interse
   const pipeline = modules.find((module) => module.onUpdate);
   for (let i = 0; i < 3; i++)
     pipeline.onUpdate({
-      processCpuResult: { reality: { trackingStatus: "NORMAL" } },
+      processCpuResult: {
+        reality: {
+          trackingStatus: "NORMAL",
+          position: camera.position.clone(),
+          rotation: camera.quaternion.clone(),
+        },
+      },
     });
   assert.equal(tracking.at(-1).state, "ready");
   assert.ok(Math.abs(tracking.at(-1).pose.position[1]) < 1e-8);
+  hits = [
+    {
+      type: "DETECTED_SURFACE",
+      position: { x: 0.2, y: 0.7, z: -1 },
+      rotation: { x: 0, y: 0, z: 0, w: 1 },
+      distance: 1.3,
+    },
+  ];
+  const event = pipeline.listeners.find(
+    (listener) => listener.event === "reality.trackingstatus",
+  );
+  event.process({ detail: { status: "NORMAL" } });
+  for (let i = 0; i < 3; i++)
+    pipeline.onUpdate({
+      processCpuResult: {
+        reality: {
+          position: camera.position.clone(),
+          rotation: camera.quaternion.clone(),
+        },
+      },
+    });
+  assert.equal(tracking.at(-1).pose.kind, "detected-surface");
+  assert.equal(tracking.at(-1).pose.position[1], 0.7);
+  event.process({ detail: { status: "LIMITED" } });
+  assert.equal(tracking.at(-1).pose, null);
+  hits = [];
   pipeline.onUpdate({
-    processCpuResult: { reality: { trackingStatus: "LIMITED" } },
+    processCpuResult: {
+      reality: {
+        trackingStatus: "LIMITED",
+        position: camera.position.clone(),
+        rotation: camera.quaternion.clone(),
+      },
+    },
   });
   assert.equal(tracking.at(-1).state, "temporarily-lost");
   assert.equal(tracking.at(-1).pose, null);
@@ -137,7 +177,13 @@ test("real 8th Wall adapter accepts only NORMAL tracking + finite ground interse
   camera.updateMatrixWorld();
   for (let i = 0; i < 3; i++)
     pipeline.onUpdate({
-      processCpuResult: { reality: { trackingStatus: "NORMAL" } },
+      processCpuResult: {
+        reality: {
+          trackingStatus: "NORMAL",
+          position: camera.position.clone(),
+          rotation: camera.quaternion.clone(),
+        },
+      },
     });
   assert.equal(tracking.at(-1).pose, null);
   await adapter.stop();

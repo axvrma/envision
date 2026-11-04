@@ -25,6 +25,8 @@ export class PlacementController {
     this.active = false;
     this.starting = false;
     this.generation = 0;
+    this.lastFrameAt = 0;
+    this.reason = null;
   }
   emit() {
     this.notify(this);
@@ -39,8 +41,8 @@ export class PlacementController {
     this.launchPromise = (async () => {
       try {
         await this.adapter.start({
-          tracking: (state, pose) => {
-            if (generation === this.generation) this.track(state, pose);
+          tracking: (state, pose, reason) => {
+            if (generation === this.generation) this.track(state, pose, reason);
           },
           ended: (error) => {
             if (generation === this.generation) this.end(error);
@@ -48,6 +50,7 @@ export class PlacementController {
         });
         if (generation !== this.generation) return;
         this.active = true;
+        this.lastFrameAt = this.now();
         if (this.state === "initializing") this.state = "searching";
       } catch (error) {
         if (generation !== this.generation) return;
@@ -57,7 +60,8 @@ export class PlacementController {
         this.error =
           error.name === "NotAllowedError"
             ? "Camera permission denied. Allow camera access in browser settings and retry."
-            : error.message;
+            : error?.message ||
+              "AR could not start. Check camera permissions and your connection, then retry.";
         this.pose = null;
         this.active = false;
       } finally {
@@ -69,22 +73,44 @@ export class PlacementController {
     })();
     return this.launchPromise;
   }
-  track(state, pose = null) {
+  track(state, pose = null, reason = null) {
+    this.lastFrameAt = this.now();
     const next =
       state === "ready" && validPose(pose)
         ? "ready"
         : state === "ready"
           ? "searching"
           : state;
-    const changed = this.state !== next;
+    const changed =
+      this.state !== next ||
+      this.pose?.kind !== pose?.kind ||
+      this.reason !== reason;
+    this.reason = reason;
     this.state = next;
     this.pose =
       next === "ready"
-        ? { position: [...pose.position], rotation: pose.rotation }
+        ? { ...pose, position: [...pose.position], rotation: pose.rotation }
         : null;
     this.poseAt = this.pose ? this.now() : 0;
     this.adapter.preview?.(this.pending, this.pose);
     if (changed) this.emit();
+  }
+  checkTracking() {
+    if (!this.active) return;
+    const elapsed = this.now() - this.lastFrameAt;
+    if (elapsed >= 8000)
+      return this.end(
+        new Error(
+          "Camera tracking stopped sending frames. Check the camera and restart AR.",
+        ),
+      );
+    if (this.pose && this.now() - this.poseAt >= 250) {
+      this.pose = null;
+      this.state = "temporarily-lost";
+      this.reason = "stale-frame";
+      this.adapter.preview?.(this.pending, null);
+      this.emit();
+    }
   }
   get canPlace() {
     return (
@@ -155,13 +181,30 @@ export class PlacementController {
     this.active = false;
     this.pose = null;
     this.state = error ? "failed" : "searching";
-    if (error) this.error = error.message;
+    if (error)
+      this.error =
+        error?.message ||
+        "The AR session stopped unexpectedly. Retry to start a new camera session.";
     this.cancel();
     this.ending = (async () => {
       try {
-        await this.adapter.stop();
+        let cleanupError = null;
+        const stop = async () => {
+          try {
+            await this.adapter.stop();
+          } catch (failure) {
+            cleanupError ||= failure;
+          }
+        };
+        await stop();
         await this.launchPromise;
-        await this.adapter.stop();
+        await stop();
+        if (cleanupError && !error) {
+          this.state = "failed";
+          this.error =
+            cleanupError.message ||
+            "The AR engine could not finish stopping. Reload before restarting.";
+        }
       } finally {
         this.starting = false;
         this.stopping = false;

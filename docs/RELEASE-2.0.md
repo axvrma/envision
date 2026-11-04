@@ -37,7 +37,7 @@ Only `fake-indexeddb` was added, as a development dependency for actual reposito
 
 ## Validation and build
 
-The clean install, TypeScript check, production build, **25 unit/static tests** and **25 Chromium browser tests** pass. Full test boundaries and measurements are in [VALIDATION.md](VALIDATION.md). The build produces `dist/` and retains renderer bundle-size warnings. The final application has not been pushed or deployed.
+The clean install, TypeScript check, production build, **33 unit/static tests** and **31 Chromium browser tests** pass. Full test boundaries and measurements are in [VALIDATION.md](VALIDATION.md). The build produces `dist/` and retains renderer bundle-size warnings. The final application has not been pushed or deployed.
 
 ## Known limitations and hardware-dependent work
 
@@ -63,3 +63,9 @@ No deployment, remote configuration or Git push was performed in this execution.
 6. When the release owner chooses to deploy, use the existing Netlify site's normal deployment process with the reviewed revision/artifact. This document does not trigger that action.
 7. After release, verify `/ar` redirects to `/ar/`; Studio and Technology load their static entry documents; fonts and hashed JS resolve; `/ar/sw.js` updates without cache; the worker scope stays `/ar/`; camera/microphone/XR permission headers are present; old-worker retirement and cold-cache startup work.
 8. Test denial/CDN-offline/unsupported-device fallbacks and Studio from the final origin. Confirm no unexpected camera uploads or new third-party integrations and retain the prior known deployment for operational rollback through the existing hosting workflow.
+
+## Mobile and 8th Wall follow-up
+
+Viewport-bounded, shrinkable sheet layouts address cropped mobile controls, including resizing a sheet after opening it. Session errors now use an explicit alert dialog above all sheets with retry and Studio actions, including a real missing-frame timeout. The worker cache version is v4.
+
+Tracking adds SDK surface hits when available, uses fresh frame camera poses/projection inverses and event tracking status, applies time-based target smoothing, and avoids rebuilding scene lists on tracking-only changes. AR form thumbnails are now static factory-generated assets (`website/public/models/thumbnails/`), with regeneration in `scripts/generate-model-thumbnails.mjs`, removing extra WebGL context creation during camera use. `src/ar/tracking.js`, `tests/tracking.test.mjs` and `tests/browser/ar-regressions.spec.ts` contain the new implementation and regressions. See validation for the physical-device limits.
